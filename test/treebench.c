@@ -44,7 +44,7 @@ int countcmps = 0;
 
 /* my comparison function compares keys */
 int mycompare(ts_algo_key_t  old,
-                         ts_algo_key_t  new)
+              ts_algo_key_t  new)
 {
 	countcmps++;
 	if (old > new) return ts_algo_cmp_less;
@@ -54,7 +54,7 @@ int mycompare(ts_algo_key_t  old,
 
 /* node comparison function compares nodes */
 int nodecompare(node_t *old,
-                           node_t *new)
+                node_t *new)
 {
 	countcmps++;
 	if (old->k1 > new->k1) return ts_algo_cmp_less;
