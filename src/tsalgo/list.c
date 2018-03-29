@@ -19,8 +19,9 @@ void ts_algo_list_init(ts_algo_list_t *list) {
  * ------------------------------------------------------------------------
  */
 static void destroy(ts_algo_list_node_t *node) {
-	if (node->nxt != NULL) {
-		destroy(node->nxt); free(node->nxt);
+	while (node->nxt != NULL) {
+		ts_algo_list_node_t *tmp = node->nxt->nxt;
+		free(node->nxt); node->nxt = tmp;
 	}
 }
 
