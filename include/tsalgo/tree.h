@@ -32,7 +32,8 @@ typedef struct {
 	ts_algo_tree_node_t    *tree;  /* the first node           */
 	ts_algo_tree_node_t   *dummy;  /* mom of the first node    */
 	uint32_t               count;  /* how many nodes are there */
-	ts_algo_compare_t    compare;  /* comparison method        */
+	void                    *rsc;  /* user resource            */
+	ts_algo_comprsc_t    compare;  /* comparison method        */
 	ts_algo_show_t          show;  /* show method              */
 	ts_algo_update_t    onUpdate;  /* on update                */
 	ts_algo_delete_t    onDelete;  /* on delete                */
@@ -52,7 +53,7 @@ typedef struct {
  *               to create or initialise the tree.
  * ------------------------------------------------------------------------
  */
-ts_algo_tree_t *ts_algo_tree_new(ts_algo_compare_t compare,
+ts_algo_tree_t *ts_algo_tree_new(ts_algo_comprsc_t compare,
                                  ts_algo_show_t    show,
                                  ts_algo_update_t  onUpdate,
                                  ts_algo_delete_t  onDelete,
@@ -72,7 +73,7 @@ ts_algo_tree_t *ts_algo_tree_new(ts_algo_compare_t compare,
  * ------------------------------------------------------------------------
  */
 ts_algo_rc_t ts_algo_tree_init(ts_algo_tree_t   *tree,
-                               ts_algo_compare_t compare,
+                               ts_algo_comprsc_t compare,
                                ts_algo_show_t    show,
                                ts_algo_update_t  onUpdate,
                                ts_algo_delete_t  onDelete,

@@ -43,7 +43,8 @@ typedef struct {
 int countcmps = 0;
 
 /* my comparison function compares keys */
-int mycompare(ts_algo_key_t  old,
+int mycompare(void *ignore,
+              ts_algo_key_t  old,
               ts_algo_key_t  new)
 {
 	countcmps++;
@@ -53,7 +54,8 @@ int mycompare(ts_algo_key_t  old,
 }
 
 /* node comparison function compares nodes */
-int nodecompare(node_t *old,
+int nodecompare(void *ignore,
+                node_t *old,
                 node_t *new)
 {
 	countcmps++;
@@ -68,22 +70,22 @@ int nodecompare(node_t *old,
 void showNode(node_t *n) {}
 
 /* node update */
-void onUpdate(node_t *on, node_t *nn) {
+void onUpdate(void *ignore, node_t *on, node_t *nn) {
 	free(nn);
 }
 
 /* do nothing */
-void noUpdate(node_t *on, node_t *nn) {}
+void noUpdate(void *ignore, node_t *on, node_t *nn) {}
 
 /* node destroy destroys nodes */
-void onDestroy(node_t **node) {
+void onDestroy(void *ignore, node_t **node) {
 	if (*node != NULL) {
 		free(*node); *node=NULL;
 	}
 }
 
 /* do nothing */
-void noDestroy(node_t **node) {}
+void noDestroy(void *ignore, node_t **node) {}
 
 /* insert preallocated nodes */
 char inserttest1(int it) {
@@ -97,7 +99,7 @@ char inserttest1(int it) {
 	countcmps=0;
 	for (j=0;j<it;j++) {
 		tree = ts_algo_tree_new(
-		       (ts_algo_compare_t)&mycompare,
+		       (ts_algo_comprsc_t)&mycompare,
 	               (ts_algo_show_t)&showNode,
 	               (ts_algo_update_t)&onUpdate,
 	               (ts_algo_delete_t)&noDestroy,
@@ -145,7 +147,7 @@ char inserttest2(int it) {
 	countcmps=0;
 	for (j=0;j<it;j++) {
 		tree = ts_algo_tree_new(
-		       (ts_algo_compare_t)&mycompare,
+		       (ts_algo_comprsc_t)&mycompare,
 	               (ts_algo_show_t)&showNode,
 	               (ts_algo_update_t)&onUpdate,
 	               (ts_algo_delete_t)&onDestroy,
@@ -192,7 +194,7 @@ char findtest1(int it) {
 	progress_t p;
 
 	tree = ts_algo_tree_new(
-		       (ts_algo_compare_t)&mycompare,
+		       (ts_algo_comprsc_t)&mycompare,
 	               (ts_algo_show_t)&showNode,
 	               (ts_algo_update_t)&noUpdate,
 	               (ts_algo_delete_t)&noDestroy,
@@ -244,7 +246,7 @@ char findtest2(int it) {
 	progress_t p;
 
 	tree = ts_algo_tree_new(
-		       (ts_algo_compare_t)&mycompare,
+		       (ts_algo_comprsc_t)&mycompare,
 	               (ts_algo_show_t)&showNode,
 	               (ts_algo_update_t)&noUpdate,
 	               (ts_algo_delete_t)&noDestroy,

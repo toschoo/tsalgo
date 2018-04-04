@@ -50,22 +50,33 @@ typedef enum {
 /* ------------------------------------------------------------------------
  * Comparison function type
  * ------------------------
- *
- * This is a callback for the sorting functions that operates
- * on the actual data types of the elements sorted in the buffer.
- * The convention is as follows:
+ * This is a callback for comparison operations.
+ * The comparison follows the following convention:
  *
  * - if the left value is less than the right value
- *      the function shall return PK_SORT_CMP_LESS
+ *      the function shall return ts_algo_cmp_less
  *
  * - if the left value is greater than the right value
- *      the function shall return PK_SORT_CMP_GREATER
+ *      the function shall return ts_algo_cmp_greater
  *
  * - if left and right value are equal
- *      the function shall return PK_SORT_CMP_EQUAL
+ *      the function shall return ts_algo_cmp_equal
  * ------------------------------------------------------------------------
  */
 typedef ts_algo_cmp_t (*ts_algo_compare_t)(void*,void*);
+
+
+/* ------------------------------------------------------------------------
+ * Comparison with additional resource
+ * -----------------------------------
+ * This is a callback for comparison operations
+ * with an additional resource.
+ * The first pointer represents the additional resource.
+ * The second and third pointer represent
+ * the first and second element to be compared respectively.
+ * ------------------------------------------------------------------------
+ */
+typedef ts_algo_cmp_t (*ts_algo_comprsc_t)(void*,void*,void*);
 
 /* ------------------------------------------------------------------------
  * Show callback
@@ -77,7 +88,7 @@ typedef void (*ts_algo_show_t)(void*);
  * event callback
  * ------------------------------------------------------------------------
  */
-typedef ts_algo_rc_t  (*ts_algo_update_t)(void*,void*);
-typedef void          (*ts_algo_delete_t)(void**);
+typedef ts_algo_rc_t  (*ts_algo_update_t)(void*,void*,void*);
+typedef void          (*ts_algo_delete_t)(void*,void**);
 
 #endif

@@ -180,7 +180,7 @@ combi_t *makenode(uint32_t n, uint32_t k) {
  * Compare two nodes
  * ------------------------------------------------------------------------
  */
-ts_algo_cmp_t compare(combi_t *left, combi_t *right) {
+ts_algo_cmp_t compare(void *ignore, combi_t *left, combi_t *right) {
 	if (left->n < right->n) return ts_algo_cmp_less;
 	if (left->n > right->n) return ts_algo_cmp_greater;
 	if (left->k < right->k) return ts_algo_cmp_less;
@@ -195,7 +195,7 @@ ts_algo_cmp_t compare(combi_t *left, combi_t *right) {
  * - free all resources held by the new node
  * ------------------------------------------------------------------------
  */
-ts_algo_rc_t addCombi(combi_t *oldN, combi_t *newN) {
+ts_algo_rc_t addCombi(void *ignore, combi_t *oldN, combi_t *newN) {
 	set_t *s;
 
 	if (newN == NULL) return TS_ALGO_OK;
@@ -217,7 +217,7 @@ ts_algo_rc_t addCombi(combi_t *oldN, combi_t *newN) {
  * - free the node
  * ------------------------------------------------------------------------
  */
-void destroy(combi_t **p) {
+void destroy(void *ignore, combi_t **p) {
 	ts_algo_list_node_t *runner;
 	set_t *c;
 
@@ -238,7 +238,7 @@ void destroy(combi_t **p) {
  * On delete: ignore
  * ------------------------------------------------------------------------
  */
-void ignore(combi_t **p) {}
+void ignore(void *ignore, combi_t **p) {}
 
 /* ------------------------------------------------------------------------
  * Show:
@@ -349,7 +349,7 @@ int main() {
 
 	/* init tree */
 	if (ts_algo_tree_init(&coeffs,
-	                      (ts_algo_compare_t)&compare,
+	                      (ts_algo_comprsc_t)&compare,
 	                      (ts_algo_show_t)&show,
 	                      (ts_algo_update_t)&addCombi,
 	                      (ts_algo_delete_t)&ignore,

@@ -48,7 +48,7 @@ static void destroytree(ts_algo_tree_t      *head,
 	if (node->right != NULL) {
 		destroytree(head,node->right); free(node->right);
 	}
-	head->onDestroy(&node->cont);
+	head->onDestroy(head,&node->cont);
 }
 
 /* ------------------------------------------------------------------------
@@ -58,7 +58,7 @@ static void destroytree(ts_algo_tree_t      *head,
 static void deletenode(ts_algo_tree_t      *head,
                        ts_algo_tree_node_t *node) 
 {
-	head->onDelete(&node->cont); free(node);
+	head->onDelete(head,&node->cont); free(node);
 }
 
 /* ------------------------------------------------------------------------
@@ -71,7 +71,7 @@ static void *treefind(ts_algo_tree_t      *tree,
                       ts_algo_tree_node_t *node,
                       void                *cont)
 {
-	int cmp = tree->compare(cont,node->cont);
+	int cmp = tree->compare(tree,cont,node->cont);
 	if (cmp == ts_algo_cmp_equal) return node->cont;
 	if (cmp == ts_algo_cmp_less) {
 		if (node->left == NULL) return NULL;
@@ -387,7 +387,7 @@ static ts_algo_rc_t insert(ts_algo_tree_t      *tree,
                            void                *cont,
                            ts_algo_bool_t      *height) 
 {
-	ts_algo_rc_t cmp = tree->compare(cont,node->cont);
+	ts_algo_rc_t cmp = tree->compare(tree,cont,node->cont);
 	ts_algo_rc_t rc;
 
 	if (cmp == ts_algo_cmp_less) {
@@ -418,7 +418,7 @@ static ts_algo_rc_t insert(ts_algo_tree_t      *tree,
 		return rc;
 	} else {
 		*height = FALSE;
-		rc = tree->onUpdate(node->cont,cont);
+		rc = tree->onUpdate(tree,node->cont,cont);
 		if (rc != TS_ALGO_OK) return rc;
 		return DOUBLE; 
 	}
@@ -479,7 +479,7 @@ static ts_algo_bool_t delete(ts_algo_tree_t      *tree,
                              void                *cont, 
                              ts_algo_bool_t      *height)
 {
-	int cmp = tree->compare(cont,node->cont);
+	int cmp = tree->compare(tree,cont,node->cont);
 	ts_algo_bool_t d;
 
 	/* the node is less than the current node */
@@ -613,7 +613,7 @@ static void showbal(ts_algo_tree_t *tree,
  * Allocate and initialise a new tree.
  * ------------------------------------------------------------------------
  */
-ts_algo_tree_t *ts_algo_tree_new(ts_algo_compare_t compare,
+ts_algo_tree_t *ts_algo_tree_new(ts_algo_comprsc_t compare,
                                  ts_algo_show_t    show,
                                  ts_algo_update_t  onUpdate,
                                  ts_algo_delete_t  onDelete,
@@ -636,13 +636,14 @@ ts_algo_tree_t *ts_algo_tree_new(ts_algo_compare_t compare,
  * ------------------------------------------------------------------------
  */
 ts_algo_rc_t ts_algo_tree_init(ts_algo_tree_t   *t, 
-                               ts_algo_compare_t compare,
+                               ts_algo_comprsc_t compare,
                                ts_algo_show_t    show,
                                ts_algo_update_t  onUpdate,
                                ts_algo_delete_t  onDelete,
                                ts_algo_delete_t  onDestroy)
 {
 	t->tree      = NULL;
+	t->rsc       = NULL;
 	t->count     = 0;
 	t->compare   = compare;
 	t->show      = show;

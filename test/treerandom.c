@@ -89,7 +89,7 @@ typedef struct {
 } mynode_t;
 
 /* how to compare such a node */
-static int compareNodes(mynode_t *n1, mynode_t *n2) {
+static int compareNodes(void *ignore, mynode_t *n1, mynode_t *n2) {
 	if (n1->k1 < n2->k1) return ts_algo_cmp_less;
 	if (n1->k1 > n2->k1) return ts_algo_cmp_greater;
 
@@ -112,7 +112,8 @@ static void showNode(mynode_t *node) {
 }
 
 /* how to update */
-static ts_algo_rc_t onUpdate(mynode_t *oldNode, 
+static ts_algo_rc_t onUpdate(void     *ignore,
+                             mynode_t *oldNode, 
                              mynode_t *newNode) 
 {
 	free(newNode); /* we use collision to cleanup memory */
@@ -120,14 +121,14 @@ static ts_algo_rc_t onUpdate(mynode_t *oldNode,
 }
 
 /* how to destroy */
-static void onDestroy(mynode_t **node)
+static void onDestroy(void *ignore, mynode_t **node)
 {
 	if (*node == NULL) return;
 	free(*node); *node = NULL;
 }
 
 /* how to delete */
-static void onDelete(mynode_t **node)
+static void onDelete(void *ignore, mynode_t **node)
 {
 	if (*node == NULL) return;
 	free(*node); *node = NULL;
@@ -149,7 +150,7 @@ char tstinsert() {
 		insert(nub,keys[i]);
 	}
 	tree = ts_algo_tree_new(
-	         (ts_algo_compare_t)&compareNodes,
+	         (ts_algo_comprsc_t)&compareNodes,
 	         (ts_algo_show_t)&showNode,
 	         (ts_algo_update_t)&onUpdate,
 	         (ts_algo_delete_t)&onDelete,
@@ -209,7 +210,7 @@ char tstinsdel() {
 		insert(nub,keys[i]);
 	}
 	tree = ts_algo_tree_new(
-	         (ts_algo_compare_t)&compareNodes,
+	         (ts_algo_comprsc_t)&compareNodes,
 	         (ts_algo_show_t)&showNode,
 	         (ts_algo_update_t)&onUpdate,
 	         (ts_algo_delete_t)&onDelete,
@@ -279,7 +280,7 @@ char tstupdate() {
 	int                i;
 
 	tree = ts_algo_tree_new(
-	         (ts_algo_compare_t)&compareNodes,
+	         (ts_algo_comprsc_t)&compareNodes,
 	         (ts_algo_show_t)&showNode,
 	         (ts_algo_update_t)&onUpdate,
 	         (ts_algo_delete_t)&onDelete,
@@ -366,7 +367,7 @@ char list_test() {
 		insert(nub,keys[i]);
 	}
 	if (ts_algo_tree_init(&tree,
-	         (ts_algo_compare_t)&compareNodes,
+	         (ts_algo_comprsc_t)&compareNodes,
 	         (ts_algo_show_t)&showNode, 
 	         (ts_algo_update_t)&onUpdate,
 	         (ts_algo_delete_t)&onDelete,
@@ -404,7 +405,7 @@ char findtest() {
 		keys[i] = randomUnsigned(1,8*ELEMENTS);
 	}
 	tree = ts_algo_tree_new(
-	         (ts_algo_compare_t)&compareNodes,
+	         (ts_algo_comprsc_t)&compareNodes,
 	         (ts_algo_show_t)&showNode,
 	         (ts_algo_update_t)&onUpdate,
 	         (ts_algo_delete_t)&onDelete,

@@ -74,7 +74,7 @@ ts_algo_rc_t ts_algo_list_append(ts_algo_list_t *list, void *cont);
 /* ------------------------------------------------------------------------
  * remove
  * ------
- * Removes the indicated note from the list, 
+ * Removes the indicated node from the list, 
  * but does not release its memory.
  * running time: O(1)
  * ------------------------------------------------------------------------

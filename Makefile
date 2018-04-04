@@ -30,9 +30,11 @@ OBJ = $(SRC)/tree.o \
       $(SRC)/list.o \
       $(SRC)/bufsort.o \
       $(SRC)/listsort.o \
-      $(SRC)/filesort.o 
+      $(SRC)/filesort.o \
+      $(SRC)/lru.o 
 
 DEP = $(SRC)/tree.c $(HDR)/tree.h \
+      $(SRC)/lru.c $(HDR)/lru.h \
       $(SRC)/list.c $(HDR)/list.h $(SRC)/listsort.c \
       $(SRC)/bufsort.c $(HDR)/bufsort.h \
       $(SRC)/filesort.c $(HDR)/filesort.h
