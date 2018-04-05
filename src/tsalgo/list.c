@@ -99,6 +99,7 @@ ts_algo_rc_t ts_algo_list_append(ts_algo_list_t *list, void *cont) {
  */
 void ts_algo_list_remove(ts_algo_list_t *list, ts_algo_list_node_t *node)
 {
+	if (node == NULL) return;
 	if (node == list->head) {
 		list->head=node->nxt;
 		if (list->head != NULL) list->head->prv=NULL;
@@ -109,7 +110,7 @@ void ts_algo_list_remove(ts_algo_list_t *list, ts_algo_list_node_t *node)
 	}
 	if (node == list->last) {
 		list->last=list->last->prv;
-		list->last->nxt=NULL;
+		if (list->last != NULL) list->last->nxt=NULL;
 		list->len--;
 		return;
 	}

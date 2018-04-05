@@ -41,6 +41,7 @@ DEP = $(SRC)/tree.c $(HDR)/tree.h \
 
 default:	lib \
 		treerandom \
+		lrurandom  \
 		treebench  \
 		listrandom \
 		sortrandom \
@@ -56,10 +57,11 @@ debug:	CFLAGS += -g
 debug:	default
 debug:	tools
 
-run:	treerandom treebench listrandom sortrandom fsortrandom
+run:	treerandom treebench listrandom lrurandom sortrandom fsortrandom
 	$(TST)/listrandom
 	$(TST)/treerandom
 	$(TST)/treebench
+	$(TST)/lrurandom
 	$(TST)/sortrandom
 	$(TST)/fsortrandom
 
@@ -81,6 +83,7 @@ binomtree:	$(TST)/binomtree
 treesmoke:	$(TST)/treesmoke
 treerandom:	$(TST)/treerandom
 treebench:	$(TST)/treebench
+lrurandom:	$(TST)/lrurandom
 listrandom:	$(TST)/listrandom
 sortrandom:	$(TST)/sortrandom
 fsortsmoke:	$(TST)/fsortsmoke
@@ -105,6 +108,7 @@ lib/libtsalgo.so:	$(OBJ) $(DEP)
 			         $(SRC)/filesort.o \
 			         $(SRC)/listsort.o \
 			         $(SRC)/tree.o \
+			         $(SRC)/lru.o \
 			         -lm
 			
 # Tests and demos
@@ -131,6 +135,14 @@ $(TST)/treerandom:	$(OBJ) $(DEP) lib $(TST)/progress.o \
 			                    $(SRC)/random.o   \
 			                    $(TST)/progress.o \
 			                    $(TST)/treerandom.o -lm -ltsalgo
+
+$(TST)/lrurandom:	$(OBJ) $(DEP) lib $(TST)/progress.o \
+			                  $(TST)/lrurandom.o $(SRC)/random.o
+			$(LNKMSG)
+			$(CC) $(LDFLAGS) -o $(TST)/lrurandom \
+			                    $(SRC)/random.o   \
+			                    $(TST)/progress.o \
+			                    $(TST)/lrurandom.o -lm -ltsalgo
 
 $(TST)/random:		$(OBJ) $(DEP) lib $(TST)/progress.o \
 			                  $(SRC)/random.o   \
@@ -199,6 +211,7 @@ clean:
 	rm -f $(TST)/treesmoke
 	rm -f $(TST)/treerandom
 	rm -f $(TST)/treebench
+	rm -f $(TST)/lrurandom
 	rm -f $(TST)/binomtree
 	rm -f $(TST)/listrandom
 	rm -f $(TST)/sortrandom

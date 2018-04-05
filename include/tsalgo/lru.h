@@ -11,6 +11,8 @@
 #include <tsalgo/tree.h>
 #include <tsalgo/list.h>
 
+#define TS_ALGO_LRU_INF 0
+
 typedef struct {
 	ts_algo_tree_t tree;
 	ts_algo_list_t list;

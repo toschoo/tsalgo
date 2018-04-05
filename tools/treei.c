@@ -19,7 +19,8 @@
 #include <tsalgo/tree.h>
 
 /* comparison callback */
-static int compareNodes(ts_algo_key_t *k1,
+static int compareNodes(void *ignore,
+                        ts_algo_key_t *k1,
                         ts_algo_key_t *k2)
 {
 	if (*k1 < *k2) return ts_algo_cmp_less;
@@ -104,7 +105,7 @@ int buildTree(ts_algo_list_t *ins,
 	int rc = 0;
 
 	tree = ts_algo_tree_new(
-	          (ts_algo_compare_t)&compareNodes,
+	          (ts_algo_comprsc_t)&compareNodes,
 	          (ts_algo_show_t)&showNode,
 	          (ts_algo_update_t)&onUpdate,
 	          (ts_algo_delete_t)&onDelete,
