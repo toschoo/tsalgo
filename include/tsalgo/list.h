@@ -82,6 +82,26 @@ ts_algo_rc_t ts_algo_list_append(ts_algo_list_t *list, void *cont);
 void ts_algo_list_remove(ts_algo_list_t *list, ts_algo_list_node_t *node);
 
 /* ------------------------------------------------------------------------
+ * promote
+ * -------
+ * Moves the indicated node one up (towards the head).
+ * If the node is already the head, nothing happens.
+ * running time: O(1)
+ * ------------------------------------------------------------------------
+ */
+void ts_algo_list_promote(ts_algo_list_t *list, ts_algo_list_node_t *node);
+
+/* ------------------------------------------------------------------------
+ * degrade
+ * -------
+ * Moves the indicated node one down (towards the tail).
+ * If the node is already the last, nothing happens.
+ * running time: O(1)
+ * ------------------------------------------------------------------------
+ */
+void ts_algo_list_degrade(ts_algo_list_t *list, ts_algo_list_node_t *node);
+
+/* ------------------------------------------------------------------------
  * copy
  * ----
  * 

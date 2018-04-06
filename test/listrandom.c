@@ -1,13 +1,20 @@
+/* ========================================================================
+ * Test linked lists
+ * -----------------
+ * (c) Tobias Schoofs, 2011 -- 2018
+ * ========================================================================
+ */
 #include <tsalgo/list.h>
 #include <tsalgo/random.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #define ELEMENTS 1024
 
-ts_algo_key_t buf[ELEMENTS];
+uint64_t buf[ELEMENTS];
 
 void init_keys() {
 	int i;
@@ -16,10 +23,266 @@ void init_keys() {
 	}
 }
 
+ts_algo_bool_t test_simple() {
+	ts_algo_list_t list;
+	uint64_t key = 1;
+
+	fprintf(stdout, "simple tests\n");
+
+	/* check empty */
+	ts_algo_list_init(&list);
+	if (list.len != 0) return FALSE;
+	if (list.head != list.last ||
+	    list.head != NULL) return FALSE;
+
+	/* remove NULL */
+	ts_algo_list_remove(&list, list.head);
+	if (list.len != 0) return FALSE;
+	if (list.head != list.last ||
+	    list.last != NULL) return FALSE;
+
+	/* insert 1 */
+	ts_algo_list_insert(&list, &key);
+	if (list.len != 1) return FALSE;
+	if (list.head != list.last ||
+	    list.last == NULL) return FALSE;
+
+	/* insert 2 */
+	ts_algo_list_insert(&list, &key);
+	if (list.len != 2) return FALSE;
+	if (list.head == list.last ||
+	    list.head == NULL      ||
+	    list.last == NULL) return FALSE;
+
+	/* remove to 1 */
+	ts_algo_list_remove(&list, list.head);
+	if (list.len != 1) return FALSE;
+	if (list.head != list.last ||
+	    list.last == NULL) return FALSE;
+
+	/* remove to 0 */
+	ts_algo_list_remove(&list, list.head);
+	if (list.len != 0) return FALSE;
+	if (list.head != list.last ||
+	    list.last != NULL) return FALSE;
+
+	/* insert 1 */
+	ts_algo_list_insert(&list, &key);
+	if (list.len != 1) return FALSE;
+	if (list.head != list.last ||
+	    list.last == NULL) return FALSE;
+
+	/* remove to 0 */
+	ts_algo_list_remove(&list, list.head);
+	if (list.len != 0) return FALSE;
+	if (list.head != list.last ||
+	    list.last != NULL) return FALSE;
+
+	/* insert 1 */
+	ts_algo_list_insert(&list, &key);
+	if (list.len != 1) return FALSE;
+	if (list.head != list.last ||
+	    list.last == NULL) return FALSE;
+
+	/* insert 2 */
+	ts_algo_list_insert(&list, &key);
+	if (list.len != 2) return FALSE;
+	if (list.head == list.last ||
+	    list.head == NULL      ||
+	    list.last == NULL) return FALSE;
+
+	/* remove to 1 */
+	ts_algo_list_remove(&list, list.head);
+	if (list.len != 1) return FALSE;
+	if (list.head != list.last ||
+	    list.last == NULL) return FALSE;
+
+	/* remove to 0 */
+	ts_algo_list_remove(&list, list.head);
+	if (list.len != 0) return FALSE;
+	if (list.head != list.last ||
+	    list.last != NULL) return FALSE;
+
+	ts_algo_list_destroy(&list);
+	return TRUE;
+}
+
+ts_algo_bool_t test_promote() {
+	ts_algo_list_node_t *runner;
+	ts_algo_list_t list;
+	uint64_t one = 1;
+	uint64_t two = 2;
+	uint64_t thr = 3;
+	uint64_t cnt = 0;
+	uint64_t *cur = 0;
+
+	fprintf(stdout, "promotion tests\n");
+
+	ts_algo_list_init(&list);
+
+	ts_algo_list_append(&list, &one);
+	ts_algo_list_append(&list, &two);
+	ts_algo_list_append(&list, &thr);
+
+	for(runner=list.head;runner!=NULL;runner=runner->nxt) {
+		cnt++; cur = runner->cont;
+		fprintf(stderr, "%lu ", *cur); 
+		if (*cur != cnt) return FALSE;
+	}
+	fprintf(stderr, "\n");
+
+	/* promote 3: 1 3 2 */
+	runner = list.head->nxt->nxt;
+	ts_algo_list_promote(&list, runner);
+
+	if (list.len != 3) return FALSE;
+	
+	runner = list.head;
+	cur = runner->cont;
+	fprintf(stderr, "%lu ", *cur);
+	if (*cur != 1) return FALSE;
+	runner = runner->nxt;
+	cur = runner->cont;
+	fprintf(stderr, "%lu ", *cur);
+	if (*cur != 3) return FALSE;
+	runner = runner->nxt;
+	cur = runner->cont;
+	fprintf(stderr, "%lu ", *cur);
+	if (*cur != 2) return FALSE;
+
+	fprintf(stderr, "\n");
+
+	runner = runner->nxt;
+	if (runner != NULL) return FALSE;
+
+	/* promote 3: 3 1 2 */
+	runner = list.head->nxt;
+	ts_algo_list_promote(&list, runner);
+
+	if (list.len != 3) return FALSE;
+	
+	runner = list.head;
+	cur = runner->cont;
+	fprintf(stderr, "%lu ", *cur);
+	if (*cur != 3) return FALSE;
+	runner = runner->nxt;
+	cur = runner->cont;
+	fprintf(stderr, "%lu ", *cur);
+	if (*cur != 1) return FALSE;
+	runner = runner->nxt;
+	cur = runner->cont;
+	fprintf(stderr, "%lu ", *cur);
+	if (*cur != 2) return FALSE;
+
+	fprintf(stderr, "\n");
+
+	runner = runner->nxt;
+	if (runner != NULL) return FALSE;
+
+	/* promote 2: 3 2 1 */
+	runner = list.head->nxt->nxt;
+	ts_algo_list_promote(&list, runner);
+
+	if (list.len != 3) return FALSE;
+	
+	runner = list.head;
+	cur = runner->cont;
+	fprintf(stderr, "%lu ", *cur);
+	if (*cur != 3) return FALSE;
+	runner = runner->nxt;
+	cur = runner->cont;
+	fprintf(stderr, "%lu ", *cur);
+	if (*cur != 2) return FALSE;
+	runner = runner->nxt;
+	cur = runner->cont;
+	fprintf(stderr, "%lu ", *cur);
+	if (*cur != 1) return FALSE;
+
+	fprintf(stderr, "\n");
+
+	runner = runner->nxt;
+	if (runner != NULL) return FALSE;
+
+	/* degrade 3: 2 3 1 */
+	runner = list.head;
+	ts_algo_list_degrade(&list, runner);
+
+	if (list.len != 3) return FALSE;
+	
+	runner = list.head;
+	cur = runner->cont;
+	fprintf(stderr, "%lu ", *cur);
+	if (*cur != 2) return FALSE;
+	runner = runner->nxt;
+	cur = runner->cont;
+	fprintf(stderr, "%lu ", *cur);
+	if (*cur != 3) return FALSE;
+	runner = runner->nxt;
+	cur = runner->cont;
+	fprintf(stderr, "%lu ", *cur);
+	if (*cur != 1) return FALSE;
+
+	fprintf(stderr, "\n");
+
+	runner = runner->nxt;
+	if (runner != NULL) return FALSE;
+
+	/* degrade 3: 2 1 3 */
+	runner = list.head->nxt;
+	ts_algo_list_degrade(&list, runner);
+
+	if (list.len != 3) return FALSE;
+	
+	runner = list.head;
+	cur = runner->cont;
+	fprintf(stderr, "%lu ", *cur);
+	if (*cur != 2) return FALSE;
+	runner = runner->nxt;
+	cur = runner->cont;
+	fprintf(stderr, "%lu ", *cur);
+	if (*cur != 1) return FALSE;
+	runner = runner->nxt;
+	cur = runner->cont;
+	fprintf(stderr, "%lu ", *cur);
+	if (*cur != 3) return FALSE;
+
+	fprintf(stderr, "\n");
+
+	runner = runner->nxt;
+	if (runner != NULL) return FALSE;
+
+	/* degrade 2: 1 2 3 */
+	runner = list.head;
+	ts_algo_list_degrade(&list, runner);
+
+	if (list.len != 3) return FALSE;
+	
+	runner = list.head;
+	cur = runner->cont;
+	fprintf(stderr, "%lu ", *cur);
+	if (*cur != 1) return FALSE;
+	runner = runner->nxt;
+	cur = runner->cont;
+	fprintf(stderr, "%lu ", *cur);
+	if (*cur != 2) return FALSE;
+	runner = runner->nxt;
+	cur = runner->cont;
+	fprintf(stderr, "%lu ", *cur);
+	if (*cur != 3) return FALSE;
+
+	fprintf(stderr, "\n");
+
+	runner = runner->nxt;
+	if (runner != NULL) return FALSE;
+	
+	ts_algo_list_destroy(&list);
+	return TRUE;
+}
+
 ts_algo_bool_t test_insert() {
 	ts_algo_list_t list;
 	ts_algo_list_node_t *runner;
-	ts_algo_key_t *key;
+	uint64_t *key;
 	int i;
 
 	ts_algo_list_init(&list);
@@ -52,7 +315,7 @@ ts_algo_bool_t test_insert() {
 ts_algo_bool_t test_append() {
 	ts_algo_list_t list;
 	ts_algo_list_node_t *runner;
-	ts_algo_key_t *key;
+	uint64_t *key;
 	int i;
 
 	ts_algo_list_init(&list);
@@ -84,7 +347,7 @@ ts_algo_bool_t test_append() {
 ts_algo_bool_t test_remove() {
 	ts_algo_list_t list;
 	ts_algo_list_node_t *runner,*tmp;
-	ts_algo_key_t *key,k1,k2;
+	uint64_t *key,k1,k2;
 	int i,j,z;
 
 	for(z=0;z<2;z++) {
@@ -184,7 +447,7 @@ ts_algo_bool_t test_remove() {
 ts_algo_bool_t test_reverse() {
 	ts_algo_list_t list,*r;
 	ts_algo_list_node_t *run1,*run2;
-	ts_algo_key_t *k1,*k2;
+	uint64_t *k1,*k2;
 	int i;
 
 	ts_algo_list_init(&list);
@@ -226,14 +489,14 @@ ts_algo_bool_t test_reverse() {
 	return TRUE;
 }
 
-ts_algo_cmp_t mycompare(ts_algo_key_t *k1, ts_algo_key_t *k2) {
+ts_algo_cmp_t mycompare(uint64_t *k1, uint64_t *k2) {
 	if (*k1 < *k2) return ts_algo_cmp_less;
 	if (*k1 > *k2) return ts_algo_cmp_greater;
 	return ts_algo_cmp_equal;
 }
 
 ts_algo_bool_t validate(ts_algo_list_t *list) {
-	ts_algo_key_t *k1,*k2;
+	uint64_t *k1,*k2;
 	ts_algo_list_node_t *runner;
 
 	runner = list->head;
@@ -356,6 +619,16 @@ ts_algo_bool_t test_merge() {
 int main () {
 	int i;
 	init_rand();
+
+	if (!test_simple()) {
+		printf("test simple failed\n");
+		return EXIT_FAILURE;
+	}
+
+	if (!test_promote()) {
+		printf("test promote failed\n");
+		return EXIT_FAILURE;
+	}
 
 	for (i=0;i<100;i++) {
 		init_keys();

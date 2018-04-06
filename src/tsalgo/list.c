@@ -124,6 +124,42 @@ void ts_algo_list_remove(ts_algo_list_t *list, ts_algo_list_node_t *node)
 }
 
 /* ------------------------------------------------------------------------
+ * promote
+ * ------------------------------------------------------------------------
+ */
+void ts_algo_list_promote(ts_algo_list_t *list, ts_algo_list_node_t *node) {
+
+	if (node == list->head) return;
+
+	ts_algo_list_node_t *tmp = node->prv;
+	ts_algo_list_remove(list, node);
+	node->nxt = tmp;
+	node->prv = tmp->prv;
+	if (tmp->prv != NULL) tmp->prv->nxt = node;
+	tmp->prv = node;
+	if (tmp == list->head) list->head = node;
+	list->len++;
+}
+
+/* ------------------------------------------------------------------------
+ * degrade
+ * ------------------------------------------------------------------------
+ */
+void ts_algo_list_degrade(ts_algo_list_t *list, ts_algo_list_node_t *node) {
+
+	if (node == list->last) return;
+
+	ts_algo_list_node_t *tmp = node->nxt;
+	ts_algo_list_remove(list, node);
+	node->prv = tmp;
+	node->nxt = tmp->nxt;
+	if (tmp->nxt != NULL) tmp->nxt->prv = node;
+	tmp->nxt = node;
+	if (tmp == list->last) list->last = node;
+	list->len++;
+}
+
+/* ------------------------------------------------------------------------
  * copy
  * ------------------------------------------------------------------------
  */

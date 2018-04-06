@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <math.h>
 
@@ -7,15 +8,15 @@
 #include <tsalgo/filesort.h>
 
 #define BLOCK    8192
-#define KEYSIZE  sizeof(ts_algo_key_t)
+#define KEYSIZE  sizeof(uint64_t)
 #define BUFSIZE  65536
 #define FILESIZE TS_ALGO_MEGA
 #define PATH  "rsc/unsorted1.bin"
 #define PATH2 "rsc/unsorted2.bin"
 #define OUTPATH "rsc/sorted.bin"
 
-ts_algo_cmp_t mycompare(ts_algo_key_t *left,
-                        ts_algo_key_t *right)
+ts_algo_cmp_t mycompare(uint64_t *left,
+                        uint64_t *right)
 {
 	if (*left < *right) return ts_algo_cmp_less;
 	if (*left > *right) return ts_algo_cmp_greater;
@@ -26,8 +27,8 @@ char createFile(char *fname) {
 	int    i,j;
 	char   tmp[BLOCK];
 	size_t nb = FILESIZE/BLOCK;
-	ts_algo_key_t k;
-	size_t s = sizeof(ts_algo_key_t);
+	uint64_t k;
+	size_t s = sizeof(uint64_t);
 	FILE *stream;
 
 	stream = fopen(fname,"w");
@@ -50,7 +51,7 @@ ts_algo_bool_t validate(char *fname,size_t size) {
 	FILE *stream;
 	char  buf[BLOCK];
 	int   i,j;
-	ts_algo_key_t k1,k2;
+	uint64_t k1,k2;
 
 	stream = fopen(fname,"r");
 	if (stream == NULL) return FALSE;

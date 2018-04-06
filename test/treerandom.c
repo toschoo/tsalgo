@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include <math.h>
 
 #include <tsalgo/random.h>
@@ -21,7 +22,7 @@
  * of elements in the tree
  */
 typedef struct {
-	ts_algo_key_t k;
+	uint64_t k;
 	char          x;
 } nub_t;
 
@@ -38,7 +39,7 @@ void init_nub(nub_t *nub) {
 }
 
 /* insert an element */
-void insert(nub_t *nub, ts_algo_key_t val) {
+void insert(nub_t *nub, uint64_t val) {
 	int i;
 	for (i=0;i<ELEMENTS;i++) {
 		if (nub[i].k == 0) {
@@ -70,7 +71,7 @@ int count_setnub(nub_t *nub) {
 }
 
 /* set a given element */
-void set_nub(nub_t *nub, ts_algo_key_t val, char x) {
+void set_nub(nub_t *nub, uint64_t val, char x) {
 	int i;
 	for (i=0;i<ELEMENTS;i++) {
 		if (nub[i].k == 0) break;
@@ -82,10 +83,10 @@ void set_nub(nub_t *nub, ts_algo_key_t val, char x) {
 
 /* node to be inserted in the tree */
 typedef struct {
-	ts_algo_key_t k1;
-	ts_algo_key_t k2;
-	ts_algo_key_t k3;
-	ts_algo_key_t k4;
+	uint64_t k1;
+	uint64_t k2;
+	uint64_t k3;
+	uint64_t k4;
 } mynode_t;
 
 /* how to compare such a node */
@@ -139,7 +140,7 @@ char tstinsert() {
 	int i;
 	int h,n,nt;
 	char r;
-	ts_algo_key_t keys[ELEMENTS];
+	uint64_t keys[ELEMENTS];
 	nub_t          nub[ELEMENTS];
 	ts_algo_tree_t *tree;
 	mynode_t *node;
@@ -199,7 +200,7 @@ char tstinsdel() {
 	int i;
 	int h,n=0;
 	char r;
-	ts_algo_key_t keys[ELEMENTS];
+	uint64_t keys[ELEMENTS];
 	nub_t          nub[ELEMENTS];
 	ts_algo_tree_t *tree;
 	mynode_t *node;
@@ -327,7 +328,7 @@ char exectest(int it) {
 
 /* validate that the resulting list is sorted */
 ts_algo_bool_t validate(ts_algo_list_t *list) {
-	ts_algo_key_t *k1,*k2;
+	uint64_t *k1,*k2;
 	ts_algo_list_node_t *runner;
 
 	runner = list->head;
@@ -355,7 +356,7 @@ ts_algo_bool_t validate(ts_algo_list_t *list) {
 char list_test() {
 	int i;
 	char r;
-	ts_algo_key_t keys[ELEMENTS];
+	uint64_t keys[ELEMENTS];
 	nub_t         nub[ELEMENTS];
 	ts_algo_tree_t  tree;
 	ts_algo_list_t *list;
@@ -397,7 +398,7 @@ char list_test() {
 /* test finding elements in the tree */
 char findtest() {
 	int i,z;
-	ts_algo_key_t keys[ELEMENTS];
+	uint64_t keys[ELEMENTS];
 	ts_algo_tree_t *tree;
 	mynode_t       *node;
 	mynode_t        what;

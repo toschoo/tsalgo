@@ -41,10 +41,12 @@ DEP = $(SRC)/tree.c $(HDR)/tree.h \
 
 default:	lib \
 		treerandom \
+		treesmoke  \
 		lrurandom  \
 		treebench  \
 		listrandom \
 		sortrandom \
+		fsortsmoke \ 
 		fsortrandom 
 
 all:	default tools
@@ -57,12 +59,16 @@ debug:	CFLAGS += -g
 debug:	default
 debug:	tools
 
-run:	treerandom treebench listrandom lrurandom sortrandom fsortrandom
+run:	treerandom treebench treesmoke \
+	listrandom lrurandom           \
+	sortrandom fsortrandom fsortsmoke
 	$(TST)/listrandom
 	$(TST)/treerandom
 	$(TST)/treebench
+	$(TST)/treesmoke
 	$(TST)/lrurandom
 	$(TST)/sortrandom
+	$(TST)/fsortsmoke
 	$(TST)/fsortrandom
 
 flags:

@@ -32,11 +32,11 @@ uint64_t timediff(timestamp_t *t1, timestamp_t *t2) {
 
 #define ELEMENTS 100000
 
-ts_algo_key_t  keys[ELEMENTS];
+uint64_t  keys[ELEMENTS];
 
 typedef struct {
-	ts_algo_key_t k1;
-	ts_algo_key_t k2;
+	uint64_t k1;
+	uint64_t k2;
 	uint64_t      value;
 } node_t;
 
@@ -44,8 +44,8 @@ int countcmps = 0;
 
 /* my comparison function compares keys */
 int mycompare(void *ignore,
-              ts_algo_key_t  old,
-              ts_algo_key_t  new)
+              uint64_t  old,
+              uint64_t  new)
 {
 	countcmps++;
 	if (old > new) return ts_algo_cmp_less;
@@ -189,8 +189,8 @@ char findtest1(int it) {
 	timestamp_t t1,t2;
 	uint64_t d = 0;
 	ts_algo_tree_t *tree;
-	ts_algo_key_t       what;
-	ts_algo_key_t       node;
+	uint64_t       what;
+	uint64_t       node;
 	progress_t p;
 
 	tree = ts_algo_tree_new(
@@ -215,7 +215,7 @@ char findtest1(int it) {
 			return FALSE;
 		}
 		for (i=0;i<ELEMENTS;i++) {
-			node = (ts_algo_key_t)ts_algo_tree_find(
+			node = (uint64_t)ts_algo_tree_find(
 			                      tree,(void*)what);
 			if (node == 0) return FALSE;
 		}
@@ -241,8 +241,8 @@ char findtest2(int it) {
 	timestamp_t t1,t2;
 	uint64_t d = 0;
 	ts_algo_tree_t  *tree;
-	ts_algo_key_t    what;
-	ts_algo_key_t    node;
+	uint64_t    what;
+	uint64_t    node;
 	progress_t p;
 
 	tree = ts_algo_tree_new(
@@ -267,8 +267,8 @@ char findtest2(int it) {
 		}
 		for (i=0;i<ELEMENTS;i++) {
 			what = i+10*ELEMENTS;
-			node = (ts_algo_key_t)ts_algo_tree_find(
-			                      tree,(void*)what);
+			node = (uint64_t)ts_algo_tree_find(
+			                  tree,(void*)what);
 			if (node != 0) {
 				printf("%llu found!\n",
 				      (unsigned long long)what);

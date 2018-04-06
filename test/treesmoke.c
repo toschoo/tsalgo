@@ -1,17 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <math.h>
 
 #include <tsalgo/tree.h>
 
 typedef struct {
-	ts_algo_key_t k1;
-	ts_algo_key_t k2;
-	ts_algo_key_t k3;
-	ts_algo_key_t k4;
+	uint64_t k1;
+	uint64_t k2;
+	uint64_t k3;
+	uint64_t k4;
 } mynode_t;
 
-static int compareNodes(mynode_t *n1,
+static int compareNodes(void *ignore,
+                        mynode_t *n1,
                         mynode_t *n2)
 {
 	if (n1->k1 < n2->k1) return ts_algo_cmp_less;
@@ -35,13 +37,15 @@ static void showNode(mynode_t *node) {
 	       node->k1,node->k2,node->k3,node->k4);
 }
 
-static ts_algo_rc_t onUpdate(mynode_t *oldNode,
+static ts_algo_rc_t onUpdate(void     *ignore,
+                             mynode_t *oldNode,
                              mynode_t *newNode)
 {
 	free(newNode); return TS_ALGO_OK;
 }
 
-static void onDelete(mynode_t **node) {
+static void onDelete(void    *ignore,
+                     mynode_t **node) {
 	if (*node != NULL) {
 		free(*node); *node=NULL;
 	}
@@ -50,10 +54,10 @@ static void onDelete(mynode_t **node) {
 void simpletest() {
 	ts_algo_tree_t *tree;
 	mynode_t       *n;
-	ts_algo_key_t i;
+	uint64_t i;
 
 	tree = ts_algo_tree_new(
-	          (ts_algo_compare_t)&compareNodes,
+	          (ts_algo_comprsc_t)&compareNodes,
 	          (ts_algo_show_t)&showNode,
 	          (ts_algo_update_t)&onUpdate,
 	          (ts_algo_delete_t)&onDelete,
@@ -87,7 +91,7 @@ void simpletest() {
 	ts_algo_tree_destroy(tree); free(tree);
 }
 
-mynode_t *mknode(ts_algo_key_t key) {
+mynode_t *mknode(uint64_t key) {
 	mynode_t *n;
 	n = malloc(sizeof(mynode_t));
 	if (n == NULL) {
@@ -127,7 +131,7 @@ void show(ts_algo_tree_t *tree) {
 		k=n>0?n*4-1:1;
 		for(runner=list.head;runner!=NULL;runner=runner->nxt) {
 			for(j=0;j<k;j++) printf(" ");
-			ts_algo_key_t *key = runner->cont;
+			uint64_t *key = runner->cont;
 			if (key == NULL) printf("NIL"); 
 			else printf("%03lu", *key);
 			for(j=1;j<k;j++) printf(" ");
@@ -145,7 +149,7 @@ void wirth() {
 
 	/* 1. */
 	tree = ts_algo_tree_new(
-	          (ts_algo_compare_t)&compareNodes,
+	          (ts_algo_comprsc_t)&compareNodes,
 	          (ts_algo_show_t)&showNode,
 	          (ts_algo_update_t)&onUpdate,
 	          (ts_algo_delete_t)&onDelete,

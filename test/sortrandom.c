@@ -9,13 +9,13 @@
 #include <progress.h>
 
 #define ELEMENTS 4096
-#define KEYSIZE  sizeof(ts_algo_key_t)
+#define KEYSIZE  sizeof(uint64_t)
 #define BUFSIZE ELEMENTS*KEYSIZE
 
-ts_algo_key_t buf[ELEMENTS];
+uint64_t buf[ELEMENTS];
 
-ts_algo_cmp_t mycompare(ts_algo_key_t *left,
-                        ts_algo_key_t *right)
+ts_algo_cmp_t mycompare(uint64_t *left,
+                        uint64_t *right)
 {
 	if (*left < *right) return ts_algo_cmp_less;
 	if (*left > *right) return ts_algo_cmp_greater;
@@ -30,7 +30,7 @@ void init_keys() {
 }
 
 ts_algo_bool_t testquick() {
-	ts_algo_key_t *sorted, *sorted2;
+	uint64_t *sorted, *sorted2;
 	int i;
 	
 	sorted=ts_algo_sort_buf_quick((const ts_algo_sort_buf_t)buf,
@@ -51,7 +51,7 @@ ts_algo_bool_t testquick() {
 }
 
 ts_algo_bool_t testmerge() {
-	ts_algo_key_t *sorted, *sorted2;
+	uint64_t *sorted, *sorted2;
 	int i;
 	
 	sorted=ts_algo_sort_buf_merge((const ts_algo_sort_buf_t)buf,

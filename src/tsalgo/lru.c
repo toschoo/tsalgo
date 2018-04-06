@@ -8,11 +8,24 @@
 #include <stdio.h>
 #include <tsalgo/lru.h>
 
+/* ------------------------------------------------------------------------
+ * The internal structure of what is stored in the tree:
+ * - the user content
+ * - and a pointer to the list node
+ * With this structure, we do not need to search for the node in the list.
+ * ------------------------------------------------------------------------
+ */
 typedef struct {
 	void *cont;
 	ts_algo_list_node_t *lnode;
 } lru_node_t;
 
+/* ------------------------------------------------------------------------
+ * How to compare: we need to delegate
+ * the comparison of the user content
+ * to the user compare function.
+ * ------------------------------------------------------------------------
+ */
 static ts_algo_cmp_t lruCompare(ts_algo_tree_t *tree,
                                 lru_node_t     *one,
                                 lru_node_t     *two) {
@@ -20,6 +33,10 @@ static ts_algo_cmp_t lruCompare(ts_algo_tree_t *tree,
 	                 NULL, one->cont, two->cont);
 }
 
+/* ------------------------------------------------------------------------
+ * How to update: delegate to the user function.
+ * ------------------------------------------------------------------------
+ */
 static ts_algo_rc_t lruUpdate(ts_algo_tree_t *tree,
                               lru_node_t     *oldN,
                               lru_node_t     *newN) {
@@ -30,18 +47,30 @@ static ts_algo_rc_t lruUpdate(ts_algo_tree_t *tree,
 	return rc;
 }
 
+/* ------------------------------------------------------------------------
+ * How to delete: delegate to the user function.
+ * ------------------------------------------------------------------------
+ */
 static void lruDelete(ts_algo_tree_t *tree,
                       lru_node_t    **n) {
 	((ts_algo_lru_t*)tree->rsc)->onDelete(tree,&(*n)->cont);
 	free(*n); *n=NULL;
 }
 
+/* ------------------------------------------------------------------------
+ * How to destroy: delegate to the user function.
+ * ------------------------------------------------------------------------
+ */
 static void lruDestroy(ts_algo_tree_t *tree,
                        lru_node_t    **n) {
 	((ts_algo_lru_t*)tree->rsc)->onDestroy(tree,&(*n)->cont);
 	free(*n); *n=NULL;
 }
 
+/* ------------------------------------------------------------------------
+ * Allocate and initialise a new LRU object
+ * ------------------------------------------------------------------------
+ */
 ts_algo_lru_t *ts_algo_lru_new(uint32_t max,
                                ts_algo_comprsc_t compare,
                                ts_algo_update_t  onUpdate,
@@ -62,6 +91,10 @@ ts_algo_lru_t *ts_algo_lru_new(uint32_t max,
 	return lru;
 }
 
+/* ------------------------------------------------------------------------
+ * Initialise an already allocated LRU object
+ * ------------------------------------------------------------------------
+ */
 ts_algo_rc_t ts_algo_lru_init(ts_algo_lru_t *lru,
                               uint32_t       max,
                               ts_algo_comprsc_t compare,
@@ -89,11 +122,19 @@ ts_algo_rc_t ts_algo_lru_init(ts_algo_lru_t *lru,
 	return TS_ALGO_OK;
 }
 
+/* ------------------------------------------------------------------------
+ * Destroy LRU object
+ * ------------------------------------------------------------------------
+ */
 void ts_algo_lru_destroy(ts_algo_lru_t *lru) {
 	ts_algo_tree_destroy(&lru->tree);
 	ts_algo_list_destroy(&lru->list);
 }
 
+/* ------------------------------------------------------------------------
+ * Get node
+ * ------------------------------------------------------------------------
+ */
 void *ts_algo_lru_get(ts_algo_lru_t *lru,
                       void         *cont)
 {
@@ -102,30 +143,28 @@ void *ts_algo_lru_get(ts_algo_lru_t *lru,
 	r = ts_algo_tree_find(&lru->tree, &n);
 	if (r == NULL) return NULL;
 
-	/* make this a list service! */
-	ts_algo_list_remove(&lru->list, r->lnode);
-	r->lnode->prv = NULL;
-	r->lnode->nxt = lru->list.head;
-	if (lru->list.head != NULL) lru->list.head->prv = r->lnode;
-	lru->list.head = r->lnode;
-	if (lru->list.last == NULL) lru->list.last = r->lnode;
-	lru->list.len++;
+	ts_algo_list_promote(&lru->list, r->lnode);
 
 	return r->cont;
 }
 
+/* ------------------------------------------------------------------------
+ * Remove (if necessary)
+ * ------------------------------------------------------------------------
+ */
 static inline void lruremove(ts_algo_lru_t *lru) {
 	if (lru->max == 0 || lru->list.len < lru->max) return;
 	lru_node_t n;
 	ts_algo_list_node_t *ln = lru->list.last;
-	if (ln == NULL) {
-		fprintf(stderr, "NO LAST\n"); return;
-	}
 	ts_algo_list_remove(&lru->list, ln);
 	n.cont = ln->cont; free(ln);
 	ts_algo_tree_delete(&lru->tree, &n);
 }
 
+/* ------------------------------------------------------------------------
+ * Add node
+ * ------------------------------------------------------------------------
+ */
 ts_algo_rc_t ts_algo_lru_add(ts_algo_lru_t *lru,
                              void         *cont) {
 	lru_node_t   *n;

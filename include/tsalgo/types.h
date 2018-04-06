@@ -9,7 +9,6 @@
 
 #include <stdint.h>
 
-typedef uint64_t ts_algo_key_t;
 typedef char     ts_algo_byte_t;
 typedef char     ts_algo_rc_t;
 typedef char     ts_algo_bool_t;

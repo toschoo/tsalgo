@@ -13,6 +13,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <math.h>
 
@@ -20,8 +21,8 @@
 
 /* comparison callback */
 static int compareNodes(void *ignore,
-                        ts_algo_key_t *k1,
-                        ts_algo_key_t *k2)
+                        uint64_t *k1,
+                        uint64_t *k2)
 {
 	if (*k1 < *k2) return ts_algo_cmp_less;
 	if (*k1 > *k2) return ts_algo_cmp_greater;
@@ -30,20 +31,22 @@ static int compareNodes(void *ignore,
 }
 
 /* show callback */
-static void showNode(ts_algo_key_t *k1) {
+static void showNode(uint64_t *k1) {
 	if (k1 == NULL) return;
 	fprintf(stderr, "%03lu", *k1);
 }
 
 /* we free on update */
-static ts_algo_rc_t onUpdate(ts_algo_key_t *ok,
-                             ts_algo_key_t *nk)
+static ts_algo_rc_t onUpdate(void *ignore,
+                             uint64_t *ok,
+                             uint64_t *nk)
 {
 	free(nk); return TS_ALGO_OK;
 }
 
 /* we free on delete */
-static void onDelete(ts_algo_key_t **k) {
+static void onDelete(void *ignore,
+                     uint64_t **k) {
 	if (*k != NULL) {
 		free(*k); *k=NULL;
 	}
@@ -74,7 +77,7 @@ void show(ts_algo_tree_t *tree) {
 		/* print the current generation */
 		for(runner=list.head;runner!=NULL;runner=runner->nxt) {
 			for(j=0;j<k;j++) printf(" ");
-			ts_algo_key_t *key = runner->cont;
+			uint64_t *key = runner->cont;
 			if (key == NULL) printf("NIL"); 
 			else printf("%03lu", *key);
 			for(j=1;j<k;j++) printf(" ");
@@ -117,7 +120,7 @@ int buildTree(ts_algo_list_t *ins,
 	}
 
 	for(runner=ins->head;runner!=NULL;runner=runner->nxt) {
-		ts_algo_key_t *key = runner->cont;
+		uint64_t *key = runner->cont;
 
 		printf("inserting %lu\n", *key);
 		if (ts_algo_tree_insert(tree,key) != TS_ALGO_OK) {
@@ -130,7 +133,7 @@ int buildTree(ts_algo_list_t *ins,
 	printf("=====================\n");
 
 	for(runner=del->head;runner!=NULL;runner=runner->nxt) {
-		ts_algo_key_t *key = runner->cont;
+		uint64_t *key = runner->cont;
 
 		printf("deleting %lu\n", *key);
 		ts_algo_tree_delete(tree,key);
@@ -150,7 +153,7 @@ int buildTree(ts_algo_list_t *ins,
 /* convert a string encoding a list of natural numbers < 1000 into a list */
 int getList(char *str, ts_algo_list_t *list) {
 	char buf[4];
-	ts_algo_key_t *k;
+	uint64_t *k;
 	size_t s;
 	int i,x,j=0;
 
@@ -177,7 +180,7 @@ int getList(char *str, ts_algo_list_t *list) {
 					return -1;
 				}
 			}
-			k = malloc(sizeof(ts_algo_key_t));
+			k = malloc(sizeof(uint64_t));
 			if (k == NULL) {
 				fprintf(stderr, "out of memory\n");
 				return -1;

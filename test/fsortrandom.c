@@ -8,15 +8,15 @@
 
 #define BLOCK    8192
 #define ELEMENTS 2048
-#define KEYSIZE  sizeof(ts_algo_key_t)
+#define KEYSIZE  sizeof(uint64_t)
 #define BUFSIZE ELEMENTS*KEYSIZE
 #define FILESIZE TS_ALGO_MEGA
 #define PATH  "rsc/unsorted1.bin"
 #define PATH2 "rsc/unsorted2.bin"
 #define OUTPATH "rsc/sorted.bin"
 
-ts_algo_cmp_t mycompare(ts_algo_key_t *left,
-                        ts_algo_key_t *right)
+ts_algo_cmp_t mycompare(uint64_t *left,
+                        uint64_t *right)
 {
 	if (*left < *right) return ts_algo_cmp_less;
 	if (*left > *right) return ts_algo_cmp_greater;
@@ -27,8 +27,8 @@ char createFile(char *fname,size_t fsize) {
 	int    i,j,r;
 	char   tmp[BLOCK];
 	size_t nb = fsize/BLOCK;
-	ts_algo_key_t k;
-	size_t s = sizeof(ts_algo_key_t);
+	uint64_t k;
+	size_t s = sizeof(uint64_t);
 	size_t lm,m = BLOCK;
 	FILE *stream;
 
@@ -63,7 +63,7 @@ char createFile(char *fname,size_t fsize) {
 void showFile(char *fname, size_t size) {
 	char           buf[BLOCK];
 	FILE          *stream;
-	ts_algo_key_t *keys;
+	uint64_t *keys;
 	size_t         max,s,i,j;
 
 	stream = fopen(fname,"r");
@@ -82,8 +82,8 @@ void showFile(char *fname, size_t size) {
 			printf("cannot read\n");
 			fclose(stream);return;
 		}
-		max=s/sizeof(ts_algo_key_t);
-		keys=(ts_algo_key_t*)buf;
+		max=s/sizeof(uint64_t);
+		keys=(uint64_t*)buf;
 		for(j=0;j<max;j++) {
 			printf("%llu\n",(unsigned long long)keys[j]);
 		}
@@ -96,7 +96,7 @@ ts_algo_bool_t validate(char *fname,size_t size) {
 	char        buf[BLOCK];
 	int         i,j=BLOCK;
 	size_t      m=BLOCK;
-	ts_algo_key_t k1,k2;
+	uint64_t k1,k2;
 
 	stream = fopen(fname,"r");
 	if (stream == NULL) return FALSE;
@@ -133,7 +133,7 @@ ts_algo_bool_t validate(char *fname,size_t size) {
 }
 
 typedef struct {
-	ts_algo_key_t key;
+	uint64_t key;
 	int      expected;
 	int         found;
 } val_t;
@@ -158,7 +158,7 @@ ts_algo_bool_t initRegister(size_t size) {
 
 ts_algo_bool_t fillRegister(size_t size, char *fname) {
 	char   buf[BLOCK];
-	ts_algo_key_t *keys;
+	uint64_t *keys;
 	FILE  *stream;
 	size_t z,j,i,s;
 	size_t max;
@@ -186,9 +186,9 @@ ts_algo_bool_t fillRegister(size_t size, char *fname) {
 			printf("cannot read file: %d\n",rc);
 			fclose(stream);return FALSE;
 		}
-		keys = (ts_algo_key_t*)buf;
+		keys = (uint64_t*)buf;
 		printf("\b\b\b\b");printf("%04zu",i/BLOCK);fflush(stdout);
-		max=s/sizeof(ts_algo_key_t);
+		max=s/sizeof(uint64_t);
 		for(j=0;j<max;j++) {
 			for (z=0;z<size;z++) {
 				if (reg[z].key == keys[j]) {
@@ -207,7 +207,7 @@ ts_algo_bool_t fillRegister(size_t size, char *fname) {
 
 ts_algo_bool_t checkRegister(size_t size, char *fname) {
 	char buf[BLOCK];
-	ts_algo_key_t *keys;
+	uint64_t *keys;
 	FILE  *stream;
 	size_t max;
 	size_t z,j,i,s;
@@ -232,9 +232,9 @@ ts_algo_bool_t checkRegister(size_t size, char *fname) {
 			printf("cannot read file\n");
 			fclose(stream);return FALSE;
 		}
-		keys=(ts_algo_key_t*)buf;
+		keys=(uint64_t*)buf;
 		printf("\b\b\b\b");printf("%04zu",i/BLOCK);fflush(stdout);
-		max=s/sizeof(ts_algo_key_t);
+		max=s/sizeof(uint64_t);
 		for(j=0;j<max;j++) {
 			for (z=0;z<size;z++) {
 				if (reg[z].key == keys[j]) {
@@ -373,7 +373,7 @@ int main() {
 		remove(PATH);
 		remove(PATH2);
 		remove(OUTPATH);
-		fs = randomFileSize(16*BLOCK,sizeof(ts_algo_key_t));
+		fs = randomFileSize(16*BLOCK,sizeof(uint64_t));
 		bs = randomBufSize();
 		rc = createFile(PATH,fs);
 		if (rc != 0) {
@@ -394,7 +394,7 @@ int main() {
 		remove(PATH);
 		remove(PATH2);
 		remove(OUTPATH);
-		fs = randomFileSize(FILESIZE,sizeof(ts_algo_key_t));
+		fs = randomFileSize(FILESIZE,sizeof(uint64_t));
 		bs = randomBufSize();
 		rc = createFile(PATH,fs);
 		if (rc != 0) {
@@ -413,8 +413,8 @@ int main() {
 		remove(PATH);
 		remove(PATH2);
 		remove(OUTPATH);
-		fs  = randomFileSize(FILESIZE,sizeof(ts_algo_key_t));
-		fs2 = randomFileSize(FILESIZE,sizeof(ts_algo_key_t));
+		fs  = randomFileSize(FILESIZE,sizeof(uint64_t));
+		fs2 = randomFileSize(FILESIZE,sizeof(uint64_t));
 		rc = createFile(PATH,fs);
 		if (rc != 0) {
 			printf("cannot create file %s\n", PATH);
