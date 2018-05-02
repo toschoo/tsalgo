@@ -46,7 +46,7 @@ default:	lib \
 		treebench  \
 		listrandom \
 		sortrandom \
-		fsortsmoke \ 
+		fsortsmoke \
 		fsortrandom 
 
 all:	default tools
@@ -58,6 +58,10 @@ tools:	treei \
 debug:	CFLAGS += -g
 debug:	default
 debug:	tools
+
+install:	$(OUTLIB)/libtsalgo.so
+		cp $(OUTLIB)/libtsalgo.so /usr/local/lib/
+		cp -r include/tsalgo /usr/local/include/
 
 run:	treerandom treebench treesmoke \
 	listrandom lrurandom           \

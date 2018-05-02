@@ -1,5 +1,5 @@
 /* ========================================================================
- * (c) Tobias Schoofs, 2011 -- 2017
+ * (c) Tobias Schoofs, 2011 -- 2018
  * ========================================================================
  * AVL Tree
  * ========================================================================
@@ -39,6 +39,25 @@ typedef struct {
 	ts_algo_delete_t    onDelete;  /* on delete                */
 	ts_algo_delete_t   onDestroy;  /* on destroy               */
 } ts_algo_tree_t;
+
+/* ------------------------------------------------------------------------
+ * filter, map and reduce (a.k.a fold)
+ * ----------------------
+ * Map parameters:
+ * - external, user-defined resource (=tree)
+ * - current node
+ * Map parameters:
+ * - external, user-defined resource (=tree)
+ * - current node
+ * Reduce parameters:
+ * - external, user-defined resource (=tree)
+ * - aggregated value
+ * - current node
+ * ------------------------------------------------------------------------
+ */
+typedef ts_algo_bool_t (*ts_algo_filter_t)(void*, void*);
+typedef ts_algo_rc_t (*ts_algo_mapper_t)(void*, void*);
+typedef ts_algo_rc_t (*ts_algo_reducer_t)(void*, void*, void*); 
 
 /* ------------------------------------------------------------------------
  * Allocate a new tree and initialise it
@@ -176,5 +195,49 @@ ts_algo_list_t *ts_algo_tree_toList(ts_algo_tree_t *tree);
 ts_algo_rc_t ts_algo_tree_grabGeneration(ts_algo_tree_t *tree,
                                          ts_algo_list_t *list,
                                          int gen);
+
+/* ------------------------------------------------------------------------
+ * Search
+ * ------
+ * Search traverses the tree until a node is found that complies with
+ * the condition expressed in 'filter'; this node is then returned.
+ * If no node is found, NULL is returned.
+ * The services, hence, is similar to find, but does not use the primary
+ * criteria of the tree, but and independent comparison method.
+ * ------------------------------------------------------------------------
+ */
+void *ts_algo_tree_search(ts_algo_tree_t *tree, ts_algo_filter_t filter);
+
+/* ------------------------------------------------------------------------
+ * Filter
+ * ------
+ * Filter traverses the tree and appends all nodes that complies with
+ * the condition expressed in 'filter' to the list.
+ * ------------------------------------------------------------------------
+ */
+ts_algo_rc_t ts_algo_tree_filter(ts_algo_tree_t    *tree,
+                                 ts_algo_list_t    *list,
+                                 ts_algo_filter_t filter);
+
+/* ------------------------------------------------------------------------
+ * Map
+ * ---
+ * Map traverses the tree and applies 'mapper' on each node.
+ * NOT YET IMPLEMENTED!
+ * ------------------------------------------------------------------------
+ */
+ts_algo_rc_t ts_algo_tree_map(ts_algo_tree_t    *tree,
+                              ts_algo_mapper_t mapper);
+
+/* ------------------------------------------------------------------------
+ * Reduce
+ * ------
+ * Reduce traverses the tree and applies 'reducer' on each node.
+ * NOT YET IMPLEMENTED!
+ * ------------------------------------------------------------------------
+ */
+ts_algo_rc_t ts_algo_tree_reduce(ts_algo_tree_t      *tree,
+                                 void           *aggregate,
+                                 ts_algo_reducer_t reducer);
 
 #endif
