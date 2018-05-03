@@ -55,7 +55,7 @@ typedef struct {
  * - current node
  * ------------------------------------------------------------------------
  */
-typedef ts_algo_bool_t (*ts_algo_filter_t)(void*, void*);
+typedef ts_algo_bool_t (*ts_algo_filter_t)(void*, const void*, const void*);
 typedef ts_algo_rc_t (*ts_algo_mapper_t)(void*, void*);
 typedef ts_algo_rc_t (*ts_algo_reducer_t)(void*, void*, void*); 
 
@@ -206,7 +206,9 @@ ts_algo_rc_t ts_algo_tree_grabGeneration(ts_algo_tree_t *tree,
  * criteria of the tree, but and independent comparison method.
  * ------------------------------------------------------------------------
  */
-void *ts_algo_tree_search(ts_algo_tree_t *tree, ts_algo_filter_t filter);
+void *ts_algo_tree_search(ts_algo_tree_t *tree,
+                          const void  *pattern,
+                      ts_algo_filter_t filter);
 
 /* ------------------------------------------------------------------------
  * Filter
@@ -217,6 +219,7 @@ void *ts_algo_tree_search(ts_algo_tree_t *tree, ts_algo_filter_t filter);
  */
 ts_algo_rc_t ts_algo_tree_filter(ts_algo_tree_t    *tree,
                                  ts_algo_list_t    *list,
+                                 const void     *pattern,
                                  ts_algo_filter_t filter);
 
 /* ------------------------------------------------------------------------

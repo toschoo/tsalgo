@@ -591,15 +591,16 @@ static ts_algo_rc_t toList(ts_algo_tree_node_t *tree,
  */
 static void *treesearch(ts_algo_tree_t       *tree,
                         ts_algo_tree_node_t  *node,
+                        const void        *pattern,
                         ts_algo_filter_t    filter)
 {
-	if (filter(tree,node->cont)) return node->cont;
+	if (filter(tree,pattern,node->cont)) return node->cont;
 	if (node->left != NULL) {
-		void *rc = treesearch(tree, node->left, filter);
+		void *rc = treesearch(tree, node->left, pattern, filter);
 		if (rc != NULL) return rc;
 	}
 	if (node->right != NULL) {
-		void *rc = treesearch(tree, node->right, filter);
+		void *rc = treesearch(tree, node->right, pattern, filter);
 		if (rc != NULL) return rc;
 	}
 	return NULL;
@@ -615,20 +616,21 @@ static void *treesearch(ts_algo_tree_t       *tree,
 static ts_algo_rc_t treefilter(ts_algo_tree_t      *tree,
                                ts_algo_list_t      *list,
                                ts_algo_tree_node_t *node,
+                               const void       *pattern,
                                ts_algo_filter_t   filter)
 {
 	ts_algo_rc_t rc;
 
-	if (filter(tree,node->cont)) {
+	if (filter(tree,pattern,node->cont)) {
 		rc = ts_algo_list_append(list, node->cont);
 		if (rc != TS_ALGO_OK) return rc;
 	}
 	if (node->left != NULL) {
-		rc = treefilter(tree, list, node->left, filter);
+		rc = treefilter(tree, list, node->left, pattern, filter);
 		if (rc != TS_ALGO_OK) return rc;
 	}
 	if (node->right != NULL) {
-		rc = treefilter(tree, list, node->right, filter);
+		rc = treefilter(tree, list, node->right, pattern, filter);
 		if (rc != TS_ALGO_OK) return rc;
 	}
 	return TS_ALGO_OK;
@@ -899,10 +901,12 @@ ts_algo_rc_t ts_algo_tree_grabGeneration(ts_algo_tree_t *tree,
  * Search
  * ------------------------------------------------------------------------
  */
-void *ts_algo_tree_search(ts_algo_tree_t *tree, ts_algo_filter_t filter) {
+void *ts_algo_tree_search(ts_algo_tree_t *tree,
+                          const void  *pattern,
+                       ts_algo_filter_t filter) {
 	if (tree == NULL) return NULL;
 	if (tree->tree == NULL) return NULL;
-	return treesearch(tree, tree->tree, filter);
+	return treesearch(tree, tree->tree, pattern, filter);
 }
 
 /* ------------------------------------------------------------------------
@@ -914,12 +918,13 @@ void *ts_algo_tree_search(ts_algo_tree_t *tree, ts_algo_filter_t filter) {
  */
 ts_algo_rc_t ts_algo_tree_filter(ts_algo_tree_t    *tree,
                                  ts_algo_list_t    *list,
+                                 void const     *pattern,
                                  ts_algo_filter_t filter) 
 {
 	if (tree == NULL) return TS_ALGO_OK;
 	if (tree->tree == NULL) return TS_ALGO_OK;
 	if (list == NULL) return TS_ALGO_INVALID;
-	return treefilter(tree, list, tree->tree, filter);
+	return treefilter(tree, list, tree->tree, pattern, filter);
 }
 
 
