@@ -637,6 +637,57 @@ static ts_algo_rc_t treefilter(ts_algo_tree_t      *tree,
 }
 
 /* ------------------------------------------------------------------------
+ * Recursively map 'mapper' on all nodes.
+ * The tree head "tree" is passed in to get access
+ * to the rsc.
+ * ------------------------------------------------------------------------
+ */
+static ts_algo_rc_t treemap(ts_algo_tree_t      *tree,
+                            ts_algo_tree_node_t *node,
+                            ts_algo_mapper_t      map)
+{
+	ts_algo_rc_t rc;
+
+	rc = map(tree,node->cont);
+	if (rc != TS_ALGO_OK) return rc;
+	if (node->left != NULL) {
+		rc = treemap(tree, node->left, map);
+		if (rc != TS_ALGO_OK) return rc;
+	}
+	if (node->right != NULL) {
+		rc = treemap(tree, node->right, map);
+		if (rc != TS_ALGO_OK) return rc;
+	}
+	return TS_ALGO_OK;
+}
+
+/* ------------------------------------------------------------------------
+ * Recursively apply 'fold' on all nodes.
+ * The tree head "tree" is passed in to get access
+ * to the rsc.
+ * ------------------------------------------------------------------------
+ */
+static ts_algo_rc_t treefold(ts_algo_tree_t      *tree,
+                             ts_algo_tree_node_t *node,
+                             void           *aggregate,
+                             ts_algo_reducer_t    fold)
+{
+	ts_algo_rc_t rc;
+
+	rc = fold(tree,aggregate,node->cont);
+	if (rc != TS_ALGO_OK) return rc;
+	if (node->left != NULL) {
+		rc = treefold(tree, node->left, aggregate, fold);
+		if (rc != TS_ALGO_OK) return rc;
+	}
+	if (node->right != NULL) {
+		rc = treefold(tree, node->right, aggregate, fold);
+		if (rc != TS_ALGO_OK) return rc;
+	}
+	return TS_ALGO_OK;
+}
+
+/* ------------------------------------------------------------------------
  * Show the left kid, show the node and show the right kid.
  * ------------------------------------------------------------------------
  */
@@ -911,9 +962,6 @@ void *ts_algo_tree_search(ts_algo_tree_t *tree,
 
 /* ------------------------------------------------------------------------
  * Filter
- * ------
- * Filter traverses the tree and appends all nodes that complies with
- * the condition expressed in 'compare' to the list.
  * ------------------------------------------------------------------------
  */
 ts_algo_rc_t ts_algo_tree_filter(ts_algo_tree_t    *tree,
@@ -927,4 +975,27 @@ ts_algo_rc_t ts_algo_tree_filter(ts_algo_tree_t    *tree,
 	return treefilter(tree, list, tree->tree, pattern, filter);
 }
 
+/* ------------------------------------------------------------------------
+ * Map
+ * ------------------------------------------------------------------------
+ */
+ts_algo_rc_t ts_algo_tree_map(ts_algo_tree_t    *tree,
+                              ts_algo_mapper_t    map) 
+{
+	if (tree == NULL) return TS_ALGO_OK;
+	if (tree->tree == NULL) return TS_ALGO_OK;
+	return treemap(tree, tree->tree, map);
+}
 
+/* ------------------------------------------------------------------------
+ * Reduce
+ * ------------------------------------------------------------------------
+ */
+ts_algo_rc_t ts_algo_tree_reduce(ts_algo_tree_t    *tree,
+                                 void         *aggregate,
+                                 ts_algo_reducer_t  fold) 
+{
+	if (tree == NULL) return TS_ALGO_OK;
+	if (tree->tree == NULL) return TS_ALGO_OK;
+	return treefold(tree, tree->tree, aggregate, fold);
+}

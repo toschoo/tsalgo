@@ -1,7 +1,7 @@
 /* ========================================================================
  * Test balanced binary tree
  * -------------------------
- * (c) Tobias Schoofs, 2011 -- 2017
+ * (c) Tobias Schoofs, 2011 -- 2018
  * ========================================================================
  */
 #include <stdio.h>
@@ -23,7 +23,7 @@
  */
 typedef struct {
 	uint64_t k;
-	char          x;
+	char     x;
 } nub_t;
 
 /* initialise the nub
@@ -87,6 +87,7 @@ typedef struct {
 	uint64_t k2;
 	uint64_t k3;
 	uint64_t k4;
+	uint64_t val;
 } mynode_t;
 
 /* how to compare such a node */
@@ -117,6 +118,16 @@ static ts_algo_rc_t onUpdate(void     *ignore,
                              mynode_t *oldNode, 
                              mynode_t *newNode) 
 {
+	free(newNode); /* we use collision to cleanup memory */
+	return TS_ALGO_OK;
+}
+
+/* alternative update: add value */
+static ts_algo_rc_t anotherUpdate(void     *ignore,
+                                 mynode_t *oldNode, 
+                                 mynode_t *newNode) 
+{
+	oldNode->val += newNode->val;
 	free(newNode); /* we use collision to cleanup memory */
 	return TS_ALGO_OK;
 }
@@ -438,18 +449,278 @@ char findtest() {
 	return 1;
 }
 
+/* test searching elements in the tree */
+ts_algo_bool_t less(void *ignore, const void *pattern, const void *node) {
+	return (((mynode_t*)node)->k1 <
+	        ((mynode_t*)pattern)->k1);
+}
+
+char searchtest() {
+	int i,z;
+	uint64_t keys[ELEMENTS];
+	uint64_t min = 0xffffffffffffffff;
+	uint64_t limit = 10;
+	ts_algo_tree_t *tree;
+	mynode_t       *node;
+	mynode_t        what;
+	for (i=0;i<ELEMENTS;i++) {
+		do  {keys[i] = rand()%(8*ELEMENTS);} while (keys[i] <= 1);
+		if (keys[i] < min) min = keys[i];
+		if (keys[i] > min) {
+			char x = rand()%2;
+			if (x) limit = keys[i];
+		}
+	}
+	tree = ts_algo_tree_new(
+	         (ts_algo_comprsc_t)&compareNodes,
+	         (ts_algo_show_t)&showNode,
+	         (ts_algo_update_t)&onUpdate,
+	         (ts_algo_delete_t)&onDelete,
+	         (ts_algo_delete_t)&onDestroy);
+	if (tree == NULL) return 0;
+	for (i=0;i<ELEMENTS;i++) {
+		node = malloc(sizeof(mynode_t));
+		if (node == NULL) return 0;
+		node->k1 = keys[i];
+		node->k2 = 0;
+		node->k3 = 0;
+		node->k4 = 0;
+		if (ts_algo_tree_insert(tree,node) != TS_ALGO_OK) return 0;
+	}
+	what.k1 = limit;
+	for (z=0;z<2;z++) {
+		if (z == 1) what.k1 = 1;
+		for (i=0;i<100;i++) {
+			node = ts_algo_tree_search(tree,&what,less);
+			if (z == 0 && node == NULL) {
+				fprintf(stderr, "NOT FOUND!\n"); return 0;
+			}
+			if (z == 1 && node != NULL) {
+				fprintf(stderr, "FOUND: %lu (less: %lu)\n",
+				              node->k1, what.k1); return 0;
+			}
+		}
+	}
+	ts_algo_tree_destroy(tree); free(tree);
+	return 1;
+}
+
+/* test filtering elements in the tree */
+char filtertest() {
+	ts_algo_rc_t rc;
+	int i,z;
+	uint64_t keys[ELEMENTS];
+	uint64_t min = 0xffffffffffffffff;
+	uint64_t limit = 10;
+	ts_algo_tree_t *tree;
+	mynode_t       *node;
+	mynode_t        what;
+	ts_algo_list_t  list;
+	ts_algo_list_node_t *runner;
+
+	for (i=0;i<ELEMENTS;i++) {
+		do  {keys[i] = rand()%(8*ELEMENTS);} while (keys[i] <= 1);
+		if (keys[i] < min) min = keys[i];
+		if (keys[i] > min) {
+			char x = rand()%2;
+			if (x) limit = keys[i];
+		}
+	}
+	tree = ts_algo_tree_new(
+	         (ts_algo_comprsc_t)&compareNodes,
+	         (ts_algo_show_t)&showNode,
+	         (ts_algo_update_t)&onUpdate,
+	         (ts_algo_delete_t)&onDelete,
+	         (ts_algo_delete_t)&onDestroy);
+	if (tree == NULL) return 0;
+	for (i=0;i<ELEMENTS;i++) {
+		node = malloc(sizeof(mynode_t));
+		if (node == NULL) return 0;
+		node->k1 = keys[i];
+		node->k2 = 0;
+		node->k3 = 0;
+		node->k4 = 0;
+		if (ts_algo_tree_insert(tree,node) != TS_ALGO_OK) return 0;
+	}
+	what.k1 = limit;
+	for (z=0;z<2;z++) {
+		if (z == 1) what.k1 = 1;
+		for (i=0;i<100;i++) {
+			ts_algo_list_init(&list);
+			rc = ts_algo_tree_filter(tree,&list,&what,less);
+			if (rc != TS_ALGO_OK) {
+				fprintf(stderr, "ERROR: %d\n", rc);
+				ts_algo_tree_destroy(tree); free(tree);
+				ts_algo_list_destroy(&list); return 0;
+			}
+			if (z == 0) { 
+				if (list.len == 0) {
+					fprintf(stderr, "NOT FOUND!\n");
+					ts_algo_tree_destroy(tree); free(tree);
+					ts_algo_list_destroy(&list); return 0;
+				}
+				for(runner=list.head;
+				    runner!=NULL;
+				    runner=runner->nxt) {
+					node = runner->cont;
+					if (node->k1 >= limit) {
+						fprintf(stderr,
+						        "out of limit!\n");
+						ts_algo_tree_destroy(tree);
+						free(tree);
+						ts_algo_list_destroy(&list);
+						return 0;
+					}
+				}
+			}
+			if (z == 1 && list.len != 0) {
+				fprintf(stderr, "FOUND: %d\n", list.len);
+				ts_algo_tree_destroy(tree); free(tree);
+				ts_algo_list_destroy(&list);
+				return 0;
+			}
+			ts_algo_list_destroy(&list);
+		}
+	}
+	ts_algo_tree_destroy(tree); free(tree);
+	return 1;
+}
+
+/* test map tree */
+ts_algo_rc_t square(void *ignore, void *pnode) {
+	mynode_t *node = pnode;
+	node->val = node->val * node->val;
+	return TS_ALGO_OK;
+}
+
+char maptest() {
+	ts_algo_rc_t rc;
+	int i;
+	uint64_t keys[ELEMENTS];
+	ts_algo_tree_t *tree;
+	mynode_t       *node;
+	ts_algo_list_t *list;
+	ts_algo_list_node_t *runner;
+
+	for (i=0;i<ELEMENTS;i++) {
+		keys[i] = rand()%(8*ELEMENTS);
+	}
+	tree = ts_algo_tree_new(
+	         (ts_algo_comprsc_t)&compareNodes,
+	         (ts_algo_show_t)&showNode,
+	         (ts_algo_update_t)&onUpdate,
+	         (ts_algo_delete_t)&onDelete,
+	         (ts_algo_delete_t)&onDestroy);
+	if (tree == NULL) return 0;
+	for (i=0;i<ELEMENTS;i++) {
+		node = malloc(sizeof(mynode_t));
+		if (node == NULL) return 0;
+		node->k1 = keys[i];
+		node->k2 = 0;
+		node->k3 = 0;
+		node->k4 = 0;
+		node->val = node->k1;
+		if (ts_algo_tree_insert(tree,node) != TS_ALGO_OK) return 0;
+	}
+	rc = ts_algo_tree_map(tree,square);
+	if (rc != TS_ALGO_OK) {
+		fprintf(stderr, "ERROR: %d\n", rc);
+		ts_algo_tree_destroy(tree); free(tree);
+		return 0;
+	}
+	list = ts_algo_tree_toList(tree);
+	if (list == NULL) {
+		fprintf(stderr, "NO LIST!\n");
+		ts_algo_tree_destroy(tree); free(tree);
+		return 0;
+	}
+	if (list->len == 0) {
+		fprintf(stderr, "LIST IS EMPTY!\n");
+		ts_algo_list_destroy(list); free(list);
+		ts_algo_tree_destroy(tree); free(tree);
+		return 0;
+	}
+	for(runner=list->head; runner!=NULL; runner=runner->nxt) {
+		node = runner->cont;
+		/*
+		fprintf(stderr, "%lu^2 = %lu\n", node->k1, node->val);
+		*/
+		if (node->val != node->k1 * node->k1) {
+			fprintf(stderr, "not the square: %lu, %lu!\n",
+			                node->val, node->k1);
+			ts_algo_list_destroy(list); free(list);
+			ts_algo_tree_destroy(tree); free(tree);
+			return 0;
+		}
+	}
+	ts_algo_list_destroy(list); free(list);
+	ts_algo_tree_destroy(tree); free(tree);
+	return 1;
+}
+
+/* test reduce tree */
+ts_algo_rc_t sum(void *rsc, void *agg, const void *pnode) {
+	(*(uint64_t*)agg) += ((mynode_t*)pnode)->val;
+	return TS_ALGO_OK;
+}
+
+char foldtest() {
+	ts_algo_rc_t rc;
+	ts_algo_bool_t ok = 1;
+	int i;
+	uint64_t theSum = 0;
+	uint64_t expect = 0;
+	uint64_t keys[ELEMENTS];
+	ts_algo_tree_t *tree;
+	mynode_t       *node;
+
+	for (i=0;i<ELEMENTS;i++) {
+		keys[i] = rand()%(8*ELEMENTS);
+	}
+	tree = ts_algo_tree_new(
+	         (ts_algo_comprsc_t)&compareNodes,
+	         (ts_algo_show_t)&showNode,
+	         (ts_algo_update_t)&anotherUpdate,
+	         (ts_algo_delete_t)&onDelete,
+	         (ts_algo_delete_t)&onDestroy);
+	if (tree == NULL) return 0;
+	for (i=0;i<ELEMENTS;i++) {
+		node = malloc(sizeof(mynode_t));
+		if (node == NULL) return 0;
+		node->k1 = keys[i];
+		node->k2 = 0;
+		node->k3 = 0;
+		node->k4 = 0;
+		node->val = node->k1;
+		expect += node->val;
+		if (ts_algo_tree_insert(tree,node) != TS_ALGO_OK) return 0;
+	}
+	rc = ts_algo_tree_reduce(tree,&theSum,sum);
+	if (rc != TS_ALGO_OK) {
+		fprintf(stderr, "ERROR: %d\n", rc);
+		ts_algo_tree_destroy(tree); free(tree);
+		return 0;
+	}
+	if (theSum != expect) {
+		fprintf(stderr, "%lu != %lu\n", theSum, expect);
+		ok = 0;
+	}
+	ts_algo_tree_destroy(tree); free(tree);
+	return ok;
+}
+
 /* execute all tests */
 int main () {
 	int i;
 	init_rand();
 
+	printf("testing insert, delete, update\n");
+	if (!exectest(100)) {
+		return EXIT_FAILURE;
+	}
 	printf("testing find\n");
 	if (!findtest()) {
 		printf("find failed!\n");
-		return EXIT_FAILURE;
-	}
-	printf("testing insert, delete, update\n");
-	if (!exectest(100)) {
 		return EXIT_FAILURE;
 	}
 	printf("testing toList\n");
@@ -458,6 +729,26 @@ int main () {
 			printf("list test failed\n");
 			return EXIT_FAILURE;
 		}
+	}
+	printf("testing search\n");
+	if (!searchtest()) {
+		printf("search failed!\n");
+		return EXIT_FAILURE;
+	}
+	printf("testing filter\n");
+	if (!filtertest()) {
+		printf("filter failed!\n");
+		return EXIT_FAILURE;
+	}
+	printf("testing map\n");
+	if (!maptest()) {
+		printf("map failed!\n");
+		return EXIT_FAILURE;
+	}
+	printf("testing reduce\n");
+	if (!foldtest()) {
+		printf("reduce failed!\n");
+		return EXIT_FAILURE;
 	}
 	printf("all tests passed\n");
 	return EXIT_SUCCESS;

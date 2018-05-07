@@ -43,8 +43,9 @@ typedef struct {
 /* ------------------------------------------------------------------------
  * filter, map and reduce (a.k.a fold)
  * ----------------------
- * Map parameters:
+ * filter parameters:
  * - external, user-defined resource (=tree)
+ * - pattern indicating what to search
  * - current node
  * Map parameters:
  * - external, user-defined resource (=tree)
@@ -57,7 +58,7 @@ typedef struct {
  */
 typedef ts_algo_bool_t (*ts_algo_filter_t)(void*, const void*, const void*);
 typedef ts_algo_rc_t (*ts_algo_mapper_t)(void*, void*);
-typedef ts_algo_rc_t (*ts_algo_reducer_t)(void*, void*, void*); 
+typedef ts_algo_rc_t (*ts_algo_reducer_t)(void*, void*, const void*); 
 
 /* ------------------------------------------------------------------------
  * Allocate a new tree and initialise it
@@ -226,7 +227,9 @@ ts_algo_rc_t ts_algo_tree_filter(ts_algo_tree_t    *tree,
  * Map
  * ---
  * Map traverses the tree and applies 'mapper' on each node.
- * NOT YET IMPLEMENTED!
+ * NOTE: The 'mapper' may change the node, but it
+ *       shall not change the keys of the node!!!
+ *       Otherwise, the oder of the tree will be corrupted.
  * ------------------------------------------------------------------------
  */
 ts_algo_rc_t ts_algo_tree_map(ts_algo_tree_t    *tree,
@@ -235,8 +238,9 @@ ts_algo_rc_t ts_algo_tree_map(ts_algo_tree_t    *tree,
 /* ------------------------------------------------------------------------
  * Reduce
  * ------
- * Reduce traverses the tree and applies 'reducer' on each node.
- * NOT YET IMPLEMENTED!
+ * Reduce traverses the tree and applies 'reducer' on each node,
+ * storing the result in 'aggregate'. The node may not be changed
+ * and is passed to the reducer as 'const void'.
  * ------------------------------------------------------------------------
  */
 ts_algo_rc_t ts_algo_tree_reduce(ts_algo_tree_t      *tree,
