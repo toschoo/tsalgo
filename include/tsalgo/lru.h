@@ -84,4 +84,20 @@ void *ts_algo_lru_get(ts_algo_lru_t *lru,
  */
 ts_algo_rc_t ts_algo_lru_add(ts_algo_lru_t *lru,
                              void         *cont);
+
+/* ------------------------------------------------------------------------
+ * Add a value to the cache as resident.
+ * Residents remain in the cache until their status
+ * as resident is revoked.
+ * ------------------------------------------------------------------------
+ */
+ts_algo_rc_t ts_algo_lru_addResident(ts_algo_lru_t *lru,
+                                     void         *cont);
+
+/* ------------------------------------------------------------------------
+ * Revoke residence from a cache element.
+ * ------------------------------------------------------------------------
+ */
+void ts_algo_lru_revokeResidence(ts_algo_lru_t *lru,
+                                 void         *cont);
 #endif

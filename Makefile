@@ -13,7 +13,7 @@ FLGMSG = @printf "CFLAGS: $(CFLAGS)\nLDFLAGS: $(LDFLAGS)\n"
 
 INSMSG = @printf ". setenv.sh"
 
-CFLAGS = -O3 -Wall -std=c99 -fPIC -D_GNU_SOURCE -D_POSIX_C_SOURCE=200809L
+CFLAGS = -O3 -g -Wall -std=c99 -fPIC -D_GNU_SOURCE -D_POSIX_C_SOURCE=200809L
 LDFLAGS = -L./lib
 
 INC = -I./include -I./test
@@ -80,11 +80,11 @@ flags:
 
 .SUFFIXES: .c .o
 
-.c.o:
+.c.o:	$(DEP)
 	$(CMPMSG)
 	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
-.cpp.o:
+.cpp.o:	$(DEP)
 	$(CMPMSG)
 	$(CXX) $(CFLAGS) $(INC) -c -o $@ $<
 

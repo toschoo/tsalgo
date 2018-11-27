@@ -18,6 +18,7 @@
 typedef struct {
 	void *cont;
 	ts_algo_list_node_t *lnode;
+        char rsdnt;
 } lru_node_t;
 
 /* ------------------------------------------------------------------------
@@ -139,6 +140,7 @@ void *ts_algo_lru_get(ts_algo_lru_t *lru,
                       void         *cont)
 {
 	lru_node_t n, *r;
+
 	n.cont = cont;
 	r = ts_algo_tree_find(&lru->tree, &n);
 	if (r == NULL) return NULL;
@@ -149,16 +151,83 @@ void *ts_algo_lru_get(ts_algo_lru_t *lru,
 }
 
 /* ------------------------------------------------------------------------
- * Remove (if necessary)
+ * Promote resident
+ * ------------------------------------------------------------------------
+ */
+static inline char promoteResident(ts_algo_lru_t *lru) {
+	lru_node_t *l;
+	ts_algo_list_node_t *tmp;
+
+	tmp = lru->list.last;
+	if (tmp == NULL) return 1;
+	l = tmp->cont;
+
+	if (!l->rsdnt) return 1;
+	if (tmp == lru->list.head) return 1;
+
+	ts_algo_list_remove(&lru->list, tmp);
+	tmp->prv = NULL;
+	lru->list.head->prv = tmp;
+	tmp->nxt = lru->list.head;
+	lru->list.head = tmp;
+	lru->list.len++;
+
+	return 0;
+}
+
+/* ------------------------------------------------------------------------
+ * Promote residents
+ * ------------------------------------------------------------------------
+ */
+static inline char promoteResidents(ts_algo_lru_t *lru) {
+	for(int i=0; i<lru->list.len; i++) {
+		if (lru->list.head == lru->list.last) return 0;
+		if (promoteResident(lru)) return 1;
+	}
+	return 0;
+}
+
+/* ------------------------------------------------------------------------
+ * Remove (if necessary and possible)
  * ------------------------------------------------------------------------
  */
 static inline void lruremove(ts_algo_lru_t *lru) {
-	if (lru->max == 0 || lru->list.len < lru->max) return;
 	lru_node_t n;
+	if (lru->max == 0 || lru->list.len < lru->max) return;
+	if (lru->list.head == NULL) return;
+	if (!promoteResidents(lru)) return;
 	ts_algo_list_node_t *ln = lru->list.last;
 	ts_algo_list_remove(&lru->list, ln);
-	n.cont = ln->cont; free(ln);
+	n.cont = ((lru_node_t*)ln->cont)->cont; free(ln);
 	ts_algo_tree_delete(&lru->tree, &n);
+}
+
+/* ------------------------------------------------------------------------
+ * Add node (either resident or not)
+ * ------------------------------------------------------------------------
+ */
+static inline ts_algo_rc_t add2lru(ts_algo_lru_t *lru,
+                                   void         *cont,
+                                   char         rsdnt) {
+	lru_node_t   *n;
+	ts_algo_rc_t rc;
+
+	n = malloc(sizeof(lru_node_t));
+	if (n == NULL) return TS_ALGO_NO_MEM;
+
+	n->cont = cont;
+        n->rsdnt = rsdnt;
+	rc = ts_algo_tree_insert(&lru->tree, n);
+	if (rc != TS_ALGO_OK) {
+		free(n); return rc;
+	}
+	rc = ts_algo_list_insert(&lru->list, n);
+	if (rc != TS_ALGO_OK) {
+		ts_algo_tree_delete(&lru->tree, n);
+		return rc;
+	}
+	n->lnode = lru->list.head;
+	lruremove(lru); return rc;
 }
 
 /* ------------------------------------------------------------------------
@@ -167,21 +236,29 @@ static inline void lruremove(ts_algo_lru_t *lru) {
  */
 ts_algo_rc_t ts_algo_lru_add(ts_algo_lru_t *lru,
                              void         *cont) {
-	lru_node_t   *n;
-	ts_algo_rc_t rc;
-	n = malloc(sizeof(lru_node_t));
-	if (n == NULL) return TS_ALGO_NO_MEM;
+	return add2lru(lru, cont, 0);
+}
 
-	n->cont = cont;
-	rc = ts_algo_tree_insert(&lru->tree, n);
-	if (rc != TS_ALGO_OK) {
-		free(n); return rc;
-	}
-	rc = ts_algo_list_insert(&lru->list, cont);
-	if (rc != TS_ALGO_OK) {
-		ts_algo_tree_delete(&lru->tree, n);
-		return rc;
-	}
-	n->lnode = lru->list.head;
-	lruremove(lru); return rc;
+/* ------------------------------------------------------------------------
+ * Add a value to the cache as resident.
+ * ------------------------------------------------------------------------
+ */
+ts_algo_rc_t ts_algo_lru_addResident(ts_algo_lru_t *lru,
+                                     void         *cont) {
+	return add2lru(lru, cont, 1);
+}
+
+/* ------------------------------------------------------------------------
+ * Revoke residence from a cache element.
+ * ------------------------------------------------------------------------
+ */
+void ts_algo_lru_revokeResidence(ts_algo_lru_t *lru,
+                                 void         *cont) {
+	lru_node_t n, *r;
+
+	n.cont = cont;
+	r = ts_algo_tree_find(&lru->tree, &n);
+	if (r == NULL) return;
+
+	r->rsdnt = 0;
 }
