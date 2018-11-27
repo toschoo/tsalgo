@@ -151,43 +151,6 @@ void *ts_algo_lru_get(ts_algo_lru_t *lru,
 }
 
 /* ------------------------------------------------------------------------
- * Promote resident
- * ------------------------------------------------------------------------
- */
-static inline char promoteResident(ts_algo_lru_t *lru) {
-	lru_node_t *l;
-	ts_algo_list_node_t *tmp;
-
-	tmp = lru->list.last;
-	if (tmp == NULL) return 1;
-	l = tmp->cont;
-
-	if (!l->rsdnt) return 1;
-	if (tmp == lru->list.head) return 1;
-
-	ts_algo_list_remove(&lru->list, tmp);
-	tmp->prv = NULL;
-	lru->list.head->prv = tmp;
-	tmp->nxt = lru->list.head;
-	lru->list.head = tmp;
-	lru->list.len++;
-
-	return 0;
-}
-
-/* ------------------------------------------------------------------------
- * Promote residents
- * ------------------------------------------------------------------------
- */
-static inline char promoteResidents(ts_algo_lru_t *lru) {
-	for(int i=0; i<lru->list.len; i++) {
-		if (lru->list.head == lru->list.last) return 0;
-		if (promoteResident(lru)) return 1;
-	}
-	return 0;
-}
-
-/* ------------------------------------------------------------------------
  * Remove (if necessary and possible)
  * ------------------------------------------------------------------------
  */
@@ -195,8 +158,8 @@ static inline void lruremove(ts_algo_lru_t *lru) {
 	lru_node_t n;
 	if (lru->max == 0 || lru->list.len < lru->max) return;
 	if (lru->list.head == NULL) return;
-	if (!promoteResidents(lru)) return;
 	ts_algo_list_node_t *ln = lru->list.last;
+	if (((lru_node_t*)ln->cont)->rsdnt) return;
 	ts_algo_list_remove(&lru->list, ln);
 	n.cont = ((lru_node_t*)ln->cont)->cont; free(ln);
 	ts_algo_tree_delete(&lru->tree, &n);
@@ -209,25 +172,42 @@ static inline void lruremove(ts_algo_lru_t *lru) {
 static inline ts_algo_rc_t add2lru(ts_algo_lru_t *lru,
                                    void         *cont,
                                    char         rsdnt) {
-	lru_node_t   *n;
+	lru_node_t *n;
 	ts_algo_rc_t rc;
+	char rm=1;
 
 	n = malloc(sizeof(lru_node_t));
 	if (n == NULL) return TS_ALGO_NO_MEM;
 
 	n->cont = cont;
         n->rsdnt = rsdnt;
+
 	rc = ts_algo_tree_insert(&lru->tree, n);
 	if (rc != TS_ALGO_OK) {
 		free(n); return rc;
 	}
-	rc = ts_algo_list_insert(&lru->list, n);
+	if (rsdnt) {
+		rc = ts_algo_list_insert(&lru->list, n);
+	} else {
+		ts_algo_list_node_t *h = lru->list.head;
+		if (h != NULL && ((lru_node_t*)h->cont)->rsdnt) {
+			rc = ts_algo_list_append(&lru->list, n);rm=0;
+		} else {
+			rc = ts_algo_list_insert(&lru->list, n);
+		}
+	}
 	if (rc != TS_ALGO_OK) {
 		ts_algo_tree_delete(&lru->tree, n);
 		return rc;
 	}
 	n->lnode = lru->list.head;
-	lruremove(lru); return rc;
+	if (rm) {
+		// we do it twice to shrink the lru
+		// when residents have blown it up
+		lruremove(lru);
+		lruremove(lru);
+	}
+	return rc;
 }
 
 /* ------------------------------------------------------------------------
