@@ -28,6 +28,7 @@ OUTLIB = lib
 
 OBJ = $(SRC)/tree.o \
       $(SRC)/list.o \
+      $(SRC)/map.o \
       $(SRC)/bufsort.o \
       $(SRC)/listsort.o \
       $(SRC)/filesort.o \
@@ -35,6 +36,7 @@ OBJ = $(SRC)/tree.o \
 
 DEP = $(SRC)/tree.c $(HDR)/tree.h \
       $(SRC)/lru.c $(HDR)/lru.h \
+      $(SRC)/map.c $(HDR)/map.h \
       $(SRC)/list.c $(HDR)/list.h $(SRC)/listsort.c \
       $(SRC)/bufsort.c $(HDR)/bufsort.h \
       $(SRC)/filesort.c $(HDR)/filesort.h
@@ -42,6 +44,7 @@ DEP = $(SRC)/tree.c $(HDR)/tree.h \
 default:	lib \
 		treerandom \
 		treesmoke  \
+		mapsmoke   \
 		lrurandom  \
 		treebench  \
 		listrandom \
@@ -64,16 +67,21 @@ install:	$(OUTLIB)/libtsalgo.so
 		cp -r include/tsalgo /usr/local/include/
 
 run:	treerandom treebench treesmoke \
-	listrandom lrurandom           \
-	sortrandom fsortrandom fsortsmoke
+	listrandom lrurandom mapsmoke  \
+	sortrandom fsortrandom fsortsmoke \
+	rsc
 	$(TST)/listrandom
 	$(TST)/treerandom
 	$(TST)/treebench
 	$(TST)/treesmoke
+	$(TST)/mapsmoke
 	$(TST)/lrurandom
 	$(TST)/sortrandom
 	$(TST)/fsortsmoke
 	$(TST)/fsortrandom
+
+rsc:	
+	mkdir rsc
 
 flags:
 	$(FLGMSG)
@@ -91,6 +99,7 @@ flags:
 # Tests and demos
 binomtree:	$(TST)/binomtree
 treesmoke:	$(TST)/treesmoke
+mapsmoke:	$(TST)/mapsmoke
 treerandom:	$(TST)/treerandom
 treebench:	$(TST)/treebench
 lrurandom:	$(TST)/lrurandom
@@ -114,6 +123,7 @@ lib/libtsalgo.so:	$(OBJ) $(DEP)
 			$(CC) -shared \
 			      -o $(OUTLIB)/libtsalgo.so \
 			         $(SRC)/list.o     \
+			         $(SRC)/map.o      \
 			         $(SRC)/bufsort.o  \
 			         $(SRC)/filesort.o \
 			         $(SRC)/listsort.o \
@@ -125,6 +135,10 @@ lib/libtsalgo.so:	$(OBJ) $(DEP)
 $(TST)/treesmoke:	$(OBJ) $(DEP) lib $(TST)/treesmoke.o
 			$(LNKMSG)
 			$(CC) $(LDFLAGS) -o $(TST)/treesmoke $(TST)/treesmoke.o -lm -ltsalgo
+
+$(TST)/mapsmoke:	$(OBJ) $(DEP) lib $(TST)/mapsmoke.o
+			$(LNKMSG)
+			$(CC) $(LDFLAGS) -o $(TST)/mapsmoke $(TST)/mapsmoke.o -lm -ltsalgo
 
 $(TST)/binomtree:	$(OBJ) $(DEP) lib $(TST)/binomtree.o $(SRC)/random.o
 			$(LNKMSG)
@@ -219,6 +233,7 @@ clean:
 	rm -f $(TST)/*.o
 	rm -f $(TOOLS)/*.o
 	rm -f $(TST)/treesmoke
+	rm -f $(TST)/mapsmoke
 	rm -f $(TST)/treerandom
 	rm -f $(TST)/treebench
 	rm -f $(TST)/lrurandom
