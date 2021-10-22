@@ -21,7 +21,15 @@ void bufinit() {
 	}
 }
 
+char keyseen(uint64_t *mem, int sz, uint64_t k) {
+	for(int i=0; i<sz; i++) {
+		if (k == mem[i]) return 1;
+	}
+	return 0;
+}
+
 int main() {
+	uint64_t *mem = NULL;
 	char err = 0;
 	srand(time(NULL));
 	bufinit();
@@ -38,8 +46,60 @@ int main() {
 			goto cleanup;
 		}
 	}
+
+	ts_algo_map_it_t *it=NULL;
+	for(int i=0;i<2;i++) {
+		if (i==0) {
+			fprintf(stderr, "Iterator...\n");
+			it=ts_algo_map_iterate(map);
+		} else {
+			fprintf(stderr, "Once more...\n");
+			ts_algo_map_it_reset(it);
+		}
+		int x=0;
+		for(; // call ts_algo_map_iterate here
+		    it != NULL && !ts_algo_map_it_eof(it);
+		    ts_algo_map_it_advance(it)
+		) {
+			ts_algo_map_slot_t *s = ts_algo_map_it_get(it);
+			if (s == NULL) {
+				free(it); it=NULL; break;
+			}
+			fprintf(stderr, "%d: %lu -> '%s'\n", it->count-1, s->key, (char*)((mydata_t*)s->data)->name);
+			x++;
+			if (x != it->count) {
+				free(it); it=NULL; break;
+			}
+		}
+		if (it == NULL) {
+			fprintf(stderr, "Can't iterate\n");
+			err = 1;
+			goto cleanup;
+		} else {
+			if (it->count != map->count+1) {
+				fprintf(stderr, "wrong count: %d\n", it->count);
+				err = 1;
+				free(it);
+				goto cleanup;
+			}
+			if (i!=0) free(it);
+		}
+	    
+		fprintf(stderr, "...OK\n");
+	}
+	mem = calloc(10, sizeof(uint64_t));
+	if (mem == NULL) {
+		fprintf(stderr, "No more memory\n");
+		err = 1;
+		goto cleanup;
+	}
+	fprintf(stderr, "Random search...\n");
 	for(int i=0;i<10;i++) {
-		int k=rand()%BUFSZ;
+		int k;
+		do {
+			k=rand()%BUFSZ;
+		} while (keyseen(mem, i, k));
+		mem[i] = k;
 		mydata_t *data = ts_algo_map_get(map, buf[k].key);
 		fprintf(stderr, "looking at '%s'\n", buf[k].name);
 		if (strcmp(data->name, buf[k].name) != 0) {
@@ -47,8 +107,22 @@ int main() {
 			err = 1;
 			goto cleanup;
 		}
+		mydata_t *datb = ts_algo_map_remove(map, buf[k].key);
+		if (datb != data) {
+			fprintf(stderr, "FAIL: something awful happened: %p != %p\n", data, datb);
+			err = 1;
+			goto cleanup;
+		}
+		data = ts_algo_map_get(map, buf[k].key);
+		if (data != NULL) {
+			fprintf(stderr, "FAIL: found removed element: %p\n", data);
+			err = 1;
+			goto cleanup;
+		}
 	}
+	fprintf(stderr, "...OK\n");
 cleanup:
+	if (mem != NULL) free(mem);
 	ts_algo_map_destroy(map); free(map);
 	if (err == 0) {
 		fprintf(stderr, "SUCCESS!\n");

@@ -19,6 +19,18 @@ typedef struct {
   ts_algo_list_t  *buf; 
 } ts_algo_map_t;
 
+typedef struct {
+  ts_algo_map_t *map;
+  int           slot;
+  int          entry;
+  uint32_t     count;
+} ts_algo_map_it_t;
+
+typedef struct {
+	uint64_t key;
+	void   *data;
+} ts_algo_map_slot_t;
+
 ts_algo_map_t *ts_algo_map_new(uint32_t sz,
                       ts_algo_delete_t del);
 ts_algo_rc_t ts_algo_map_init(ts_algo_map_t *map, uint32_t sz,
@@ -28,7 +40,14 @@ ts_algo_rc_t ts_algo_map_add(ts_algo_map_t *map, uint64_t key, void *data);
 void *ts_algo_map_get(ts_algo_map_t *map, uint64_t key);
 void *ts_algo_map_remove(ts_algo_map_t *map, uint64_t key);
 void ts_algo_map_delete(ts_algo_map_t *map, uint64_t key);
-ts_algo_rc_t ts_algo_map_update(ts_algo_map_t *map, uint64_t key);
+void *ts_algo_map_update(ts_algo_map_t *map, uint64_t key, void *data);
+
+ts_algo_map_it_t *ts_algo_map_iterate(ts_algo_map_t *map);
+void ts_algo_map_it_advance(ts_algo_map_it_t *it);
+char ts_algo_map_it_eof(ts_algo_map_it_t *it);
+void ts_algo_map_it_reset(ts_algo_map_it_t *it);
+ts_algo_map_slot_t *ts_algo_map_it_get(ts_algo_map_it_t *it);
+
 void ts_algo_map_showslots(ts_algo_map_t *map);
 
 #endif

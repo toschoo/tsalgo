@@ -4,10 +4,7 @@
 #include <string.h>
 #include <tsalgo/map.h>
 
-typedef struct {
-	uint64_t key;
-	void   *data;
-} slot_t;
+#define slot_t ts_algo_map_slot_t
 
 #define MAKESLOT(k,d) \
 	slot_t *slot = malloc(sizeof(slot_t)); \
@@ -53,7 +50,7 @@ ts_algo_rc_t ts_algo_map_init(ts_algo_map_t *map, uint32_t sz,
 	return bufinit(map);
 }
 
-static void listdestroy(ts_algo_list_t *list, ts_algo_delete_t del) {
+static inline void listdestroy(ts_algo_list_t *list, ts_algo_delete_t del) {
 	for(ts_algo_list_node_t *run=list->head; run!=NULL; run=run->nxt) {
 		if (run->cont != NULL) {
 			void *x = SLOT(run->cont)->data; free(run->cont);
@@ -87,11 +84,25 @@ ts_algo_rc_t ts_algo_map_add(ts_algo_map_t *map, uint64_t key, void *data) {
 	return rc;
 }
 
-void *ts_algo_map_get(ts_algo_map_t *map, uint64_t key) {
+static inline ts_algo_list_node_t *getnode(ts_algo_map_t *map, uint64_t key) {
 	uint64_t k = key%map->curSize;
 	for(ts_algo_list_node_t *run=map->buf[k].head; run!=NULL; run=run->nxt) {
-		if (key == SLOT(run->cont)->key) return SLOT(run->cont)->data;
+		if (key == SLOT(run->cont)->key) return run;
 	}
+	return NULL;
+
+}
+
+static inline slot_t *getslot(ts_algo_map_t *map, uint64_t key) {
+	ts_algo_list_node_t *n = getnode(map, key);
+	if (n != NULL) return n->cont;
+	return NULL;
+
+}
+
+void *ts_algo_map_get(ts_algo_map_t *map, uint64_t key) {
+	slot_t *s = getslot(map, key);
+	if (s != NULL) return s->data;
 	return NULL;
 }
 
@@ -103,8 +114,70 @@ void *ts_algo_map_remove(ts_algo_map_t *map, uint64_t key) {
 			slot_t *slot = run->cont;
 			void *data = slot->data;
 			free(run); free(slot);
+			map->count--;
 			return data;
 		}
+	}
+	return NULL;
+}
+
+void ts_algo_map_delete(ts_algo_map_t *map, uint64_t key) {
+	void *data = ts_algo_map_remove(map, key);
+	if (data != NULL && map->del != NULL) map->del(NULL, data);
+}
+
+void *ts_algo_map_update(ts_algo_map_t *map, uint64_t key, void *data) {
+	slot_t *s = getslot(map, key);
+	if (s == NULL) return NULL;
+	s->data = data;
+	return data;
+}
+
+ts_algo_map_it_t *ts_algo_map_iterate(ts_algo_map_t *map) {
+	ts_algo_map_it_t *it = calloc(1, sizeof(ts_algo_map_it_t));
+	if (it == NULL) return NULL;
+	it->map = map;
+	ts_algo_map_it_reset(it);
+	return it;
+}
+
+char ts_algo_map_it_eof(ts_algo_map_it_t *it) {
+	if (it->count > it->map->count) return 1;
+	return 0;
+}
+
+void ts_algo_map_it_reset(ts_algo_map_it_t *it) {
+	it->count = 0;
+	it->slot = 0;
+	it->entry = 0;
+	ts_algo_map_it_advance(it);
+}
+
+void ts_algo_map_it_advance(ts_algo_map_it_t *it) {
+	it->count++;
+	if (it->count >= it->map->count) return;
+	// fprintf(stderr, "advance: %d | %d\n", it->entry, it->map->buf[it->slot].len);
+	if (it->entry+1 >= it->map->buf[it->slot].len) {
+		it->entry = 0;
+		do {
+			// fprintf(stderr, "slot %d (%d)\n", it->slot, it->map->buf[it->slot].len);
+			it->slot++;
+		} while(it->slot < it->map->curSize &&
+		        it->map->buf[it->slot].len == 0);
+	} else {
+		it->entry++;
+	}
+}
+
+ts_algo_map_slot_t *ts_algo_map_it_get(ts_algo_map_it_t *it) {
+	// fprintf(stderr, "COUNT: %u > %u\n", it->count, it->map->count);
+	if (it->count > it->map->count) return NULL; // :-(
+	int i=0;
+	for(ts_algo_list_node_t *run=it->map->buf[it->slot].head;
+	    run!=NULL; run=run->nxt)
+	{
+		if (i == it->entry) return run->cont;
+		i++;
 	}
 	return NULL;
 }
@@ -114,10 +187,3 @@ void ts_algo_map_showslots(ts_algo_map_t *map) {
 		fprintf(stderr, "%06d: %d\n", i, map->buf[i].len);
 	}
 }
-
-void ts_algo_map_delete(ts_algo_map_t *map, uint64_t key) {
-	void *data = ts_algo_map_remove(map, key);
-	if (data != NULL) map->del(NULL, data);
-}
-
-ts_algo_rc_t ts_algo_map_update(ts_algo_map_t *map, uint64_t key);
