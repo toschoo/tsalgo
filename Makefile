@@ -75,6 +75,7 @@ run:	treerandom treebench treesmoke \
 	$(TST)/treebench
 	$(TST)/treesmoke
 	$(TST)/mapsmoke
+	$(TST)/mapbench
 	$(TST)/lrurandom
 	$(TST)/sortrandom
 	$(TST)/fsortsmoke
@@ -100,6 +101,7 @@ flags:
 binomtree:	$(TST)/binomtree
 treesmoke:	$(TST)/treesmoke
 mapsmoke:	$(TST)/mapsmoke
+mapbench:	$(TST)/mapbench
 treerandom:	$(TST)/treerandom
 treebench:	$(TST)/treebench
 lrurandom:	$(TST)/lrurandom
@@ -185,6 +187,13 @@ $(TST)/treebench:	$(OBJ) $(DEP) lib $(TST)/treebench.o $(TST)/progress.o \
 			                    $(TST)/progress.o \
 			                    $(TST)/treebench.o -ltsalgo -lm
 
+$(TST)/mapbench:	$(OBJ) $(DEP) lib $(TST)/mapbench.o $(TST)/progress.o \
+			                  $(SRC)/random.o
+			$(LNKMSG)
+			$(CC) $(LDFLAGS) -o $(TST)/mapbench  \
+			                    $(SRC)/random.o   \
+			                    $(TST)/progress.o \
+			                    $(TST)/mapbench.o -ltsalgo -lm
 
 $(TST)/listrandom:	$(OBJ) $(DEP) lib $(TST)/listrandom.o $(SRC)/random.o
 			$(LNKMSG)
@@ -234,6 +243,7 @@ clean:
 	rm -f $(TOOLS)/*.o
 	rm -f $(TST)/treesmoke
 	rm -f $(TST)/mapsmoke
+	rm -f $(TST)/mapbench
 	rm -f $(TST)/treerandom
 	rm -f $(TST)/treebench
 	rm -f $(TST)/lrurandom

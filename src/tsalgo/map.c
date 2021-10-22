@@ -1,5 +1,6 @@
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <tsalgo/map.h>
 
@@ -71,7 +72,8 @@ ts_algo_rc_t ts_algo_map_add(ts_algo_map_t *map, void *data) {
 	uint64_t k = map->grab(data);
 	uint64_t h = k%map->curSize;
 	rc = ts_algo_list_insert(&map->buf[h], data);
-	return rc;	
+	map->count++;
+	return rc;
 }
 
 void *ts_algo_map_get(ts_algo_map_t *map, uint64_t key) {
@@ -93,6 +95,12 @@ void *ts_algo_map_remove(ts_algo_map_t *map, uint64_t key) {
 		}
 	}
 	return NULL;
+}
+
+void ts_algo_map_showslots(ts_algo_map_t *map) {
+	for (int i=0;i<map->curSize;i++) {
+		fprintf(stderr, "%06d: %d\n", i, map->buf[i].len);
+	}
 }
 
 void ts_algo_map_delete(ts_algo_map_t *map, uint64_t key) {

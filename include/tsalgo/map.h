@@ -34,5 +34,6 @@ void *ts_algo_map_get(ts_algo_map_t *map, uint64_t key);
 void *ts_algo_map_remove(ts_algo_map_t *map, uint64_t key);
 void ts_algo_map_delete(ts_algo_map_t *map, uint64_t key);
 ts_algo_rc_t ts_algo_map_update(ts_algo_map_t *map, uint64_t key);
+void ts_algo_map_showslots(ts_algo_map_t *map);
 
 #endif
