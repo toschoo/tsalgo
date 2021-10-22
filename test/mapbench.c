@@ -31,10 +31,6 @@ uint64_t timediff(timestamp_t *t1, timestamp_t *t2) {
 	return (t3.tv_sec * NPERSEC + t3.tv_nsec);
 }
 
-uint64_t grab(void *data) {
-	return ((uint64_t)data);
-}
-
 char testinsbuf(int it) {
 	progress_t p;
 	timestamp_t t1,t2;
@@ -83,14 +79,14 @@ char testinsmap(int it) {
 	fprintf(stderr, "Map\n");
 	init_progress(&p,stdout,it);
 	for (int j=0;j<it;j++) {
-		ts_algo_map_init(map, 32168, grab, NULL);
+		ts_algo_map_init(map, 32168, NULL);
 		if (timestamp(&t1)) {
 			printf("cannot timestamp\n");
 			err = 1;
 			break;
 		}
 		for (int i=0;i<ELEMENTS;i++) {
-			ts_algo_rc_t rc = ts_algo_map_add(map, (void*)(uint64_t)i);
+			ts_algo_rc_t rc = ts_algo_map_add(map, i, (void*)(uint64_t)i);
 			if (rc != TS_ALGO_OK) {
 				fprintf(stderr, "Can't add: %d\n", rc);
 				err = 1; break;

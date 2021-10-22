@@ -21,21 +21,17 @@ void bufinit() {
 	}
 }
 
-uint64_t grab(void *data) {
-	return ((mydata_t*)data)->key;
-}
-
 int main() {
 	char err = 0;
 	srand(time(NULL));
 	bufinit();
-	ts_algo_map_t *map = ts_algo_map_new(0, grab, NULL);
+	ts_algo_map_t *map = ts_algo_map_new(0, NULL);
 	if (map == NULL) {
 		fprintf(stderr, "Can't creat map\n");
 		exit(1);
 	}
 	for (int i=0;i<BUFSZ;i++) {
-		ts_algo_rc_t rc = ts_algo_map_add(map, buf+i);
+		ts_algo_rc_t rc = ts_algo_map_add(map, buf[i].key, buf+i);
 		if (rc != TS_ALGO_OK) {
 			fprintf(stderr, "Can't add: %d\n", rc);
 			err = 1;
