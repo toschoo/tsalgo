@@ -79,7 +79,11 @@ char testinsmap(int it) {
 	fprintf(stderr, "Map\n");
 	init_progress(&p,stdout,it);
 	for (int j=0;j<it;j++) {
-		ts_algo_map_init(map, 32168, NULL);
+		if (ts_algo_map_init(map, 32768, NULL) != TS_ALGO_OK) {
+			printf("cannot init map\n");
+			err = 1;
+			break;
+		}
 		if (timestamp(&t1)) {
 			printf("cannot timestamp\n");
 			err = 1;

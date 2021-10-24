@@ -38,9 +38,19 @@ ts_algo_map_t *ts_algo_map_new(uint32_t sz,
 	return map;
 }
 
+static inline uint32_t popcount(uint32_t n) {
+	uint32_t count = 0;
+	while (n) { // improve!
+ 		count += n & 1;
+		n >>= 1;
+	}
+	return count;
+}
+
 ts_algo_rc_t ts_algo_map_init(ts_algo_map_t *map, uint32_t sz,
 		                         ts_algo_delete_t del) {
 	if (map == NULL) return TS_ALGO_INVALID;
+	if (popcount(sz) > 1) return TS_ALGO_INVALID;
 	map->baseSize = sz==0?8192:sz;
 	map->curSize  = map->baseSize;
 	map->count    = 0;
