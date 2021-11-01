@@ -23,8 +23,45 @@ static ts_algo_rc_t bufinit(ts_algo_map_t *map) {
 	return TS_ALGO_OK;
 }
 
+static inline ts_algo_rc_t copyall(ts_algo_map_t *src,
+                                   ts_algo_map_t *trg)
+{
+	ts_algo_rc_t rc = TS_ALGO_OK;
+	ts_algo_map_it_t *it = ts_algo_map_iterate(src);
+	if (it == NULL) return TS_ALGO_NO_MEM;
+
+	for(;!ts_algo_map_it_eof(it);
+	      ts_algo_map_it_advance(it))
+	{
+		ts_algo_map_slot_t *s = ts_algo_map_it_get(it);
+		rc = ts_algo_map_add(trg, s->key, s->data);
+		if (rc != TS_ALGO_OK) break;
+	}
+	free(it);
+	return rc;
+}
+
 static ts_algo_rc_t bufresize(ts_algo_map_t *map) {
-	return TS_ALGO_INVALID;
+	ts_algo_map_t tmp;
+	ts_algo_rc_t rc = TS_ALGO_OK;
+
+	rc = ts_algo_map_init(&tmp, map->curSize<<2, map->del);
+	if (rc != TS_ALGO_OK) return rc;
+
+	rc = copyall(map, &tmp);
+	if (rc != TS_ALGO_OK) {
+		ts_algo_map_destroy(&tmp);
+		return rc;
+	}
+
+	ts_algo_list_t *buf = map->buf;
+	map->buf = tmp.buf; tmp.buf = buf;
+	tmp.curSize = map->curSize;
+	map->curSize=tmp.baseSize;
+
+	ts_algo_map_destroy(&tmp);
+
+	return TS_ALGO_OK;
 }
 
 ts_algo_map_t *ts_algo_map_new(uint32_t sz,
@@ -38,6 +75,7 @@ ts_algo_map_t *ts_algo_map_new(uint32_t sz,
 	return map;
 }
 
+/* currently not needed
 static inline uint32_t popcount(uint32_t n) {
 	uint32_t count = 0;
 	while (n) { // improve!
@@ -46,11 +84,11 @@ static inline uint32_t popcount(uint32_t n) {
 	}
 	return count;
 }
+*/
 
 ts_algo_rc_t ts_algo_map_init(ts_algo_map_t *map, uint32_t sz,
 		                         ts_algo_delete_t del) {
 	if (map == NULL) return TS_ALGO_INVALID;
-	if (popcount(sz) > 1) return TS_ALGO_INVALID;
 	map->baseSize = sz==0?8192:sz;
 	map->curSize  = map->baseSize;
 	map->count    = 0;
@@ -83,7 +121,8 @@ void ts_algo_map_destroy(ts_algo_map_t *map) {
 
 ts_algo_rc_t ts_algo_map_add(ts_algo_map_t *map, uint64_t key, void *data) {
 	ts_algo_rc_t rc=TS_ALGO_OK;
-	if (map->count > map->curSize<<2) {
+	if (map->count >= map->curSize<<1) {
+		// fprintf(stderr, "%u > %u\n", map->count, map->curSize <<1);
 		rc = bufresize(map);
 	        if (rc != TS_ALGO_OK) return rc;
 	}

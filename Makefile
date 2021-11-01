@@ -67,7 +67,7 @@ install:	$(OUTLIB)/libtsalgo.so
 		cp -r include/tsalgo /usr/local/include/
 
 run:	treerandom treebench treesmoke \
-	listrandom lrurandom mapsmoke  \
+	listrandom lrurandom mapsmoke mapbench  \
 	sortrandom fsortrandom fsortsmoke \
 	rsc
 	$(TST)/listrandom
