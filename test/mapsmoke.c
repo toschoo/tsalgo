@@ -39,7 +39,7 @@ int testAddAndIter(uint32_t mapsz) {
 		return -1;
 	}
 	for (int i=0;i<BUFSZ;i++) {
-		ts_algo_rc_t rc = ts_algo_map_add(map, (char*)&buf[i].key, sizeof(uint64_t), buf+i);
+		ts_algo_rc_t rc = ts_algo_map_addId(map, buf[i].key, buf+i);
 		if (rc != TS_ALGO_OK) {
 			fprintf(stderr, "Can't add: %d\n", rc);
 			err = 1;
@@ -102,20 +102,20 @@ int testAddAndIter(uint32_t mapsz) {
 			k=rand()%BUFSZ;
 		} while (keyseen(mem, i, k));
 		mem[i] = k;
-		mydata_t *data = ts_algo_map_get(map, (char*)&buf[k].key, sizeof(uint64_t));
+		mydata_t *data = ts_algo_map_getId(map, buf[k].key);
 		// fprintf(stderr, "looking at '%s'\n", buf[k].name);
 		if (strcmp(data->name, buf[k].name) != 0) {
 			fprintf(stderr, "FAIL: wrong name for %d: %s\n", k, data->name);
 			err = 1;
 			goto cleanup;
 		}
-		mydata_t *datb = ts_algo_map_remove(map, (char*)&buf[k].key, sizeof(uint64_t));
+		mydata_t *datb = ts_algo_map_removeId(map, buf[k].key);
 		if (datb != data) {
 			fprintf(stderr, "FAIL: something awful happened: %p != %p\n", data, datb);
 			err = 1;
 			goto cleanup;
 		}
-		data = ts_algo_map_get(map, (char*)&buf[k].key, sizeof(uint64_t));
+		data = ts_algo_map_getId(map, buf[k].key);
 		if (data != NULL) {
 			fprintf(stderr, "FAIL: found removed element: %p (%p)\n", data, datb);
 			err = 1;

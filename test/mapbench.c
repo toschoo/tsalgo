@@ -124,7 +124,7 @@ int main() {
 	if (testinsmap(100, 32768) != 0) {
 		fprintf(stderr, "FAILED!\n");
 		exit(1);
-	} 
+	}
 	if (testinsmap(100, 65536) != 0) {
 		fprintf(stderr, "FAILED!\n");
 		exit(1);

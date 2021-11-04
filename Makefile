@@ -45,6 +45,7 @@ default:	lib \
 		treerandom \
 		treesmoke  \
 		mapsmoke   \
+		mapbench   \
 		lrurandom  \
 		treebench  \
 		listrandom \

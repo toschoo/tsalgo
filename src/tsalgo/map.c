@@ -36,18 +36,19 @@ static inline ts_algo_rc_t copyall(ts_algo_map_t *src,
                                    ts_algo_map_t *trg)
 {
 	ts_algo_rc_t rc = TS_ALGO_OK;
-	ts_algo_map_it_t *it = ts_algo_map_iterate(src);
-	if (it == NULL) return TS_ALGO_NO_MEM;
 
-	for(;!ts_algo_map_it_eof(it);
-	      ts_algo_map_it_advance(it))
-	{
-		ts_algo_map_slot_t *s = ts_algo_map_it_get(it);
-		if (s == NULL) break;
-		rc = ts_algo_map_add(trg, s->key, s->ksz, s->data);
-		if (rc != TS_ALGO_OK) break;
+	for(int i=0; i<src->curSize; i++) {
+		for(ts_algo_list_node_t *run=src->buf[i].head; run!=NULL;) {
+			ts_algo_map_slot_t *s = run->cont;
+			if (s == NULL) break;
+			uint64_t k = trg->hsh(s->key, s->ksz)%trg->curSize;
+			rc = ts_algo_list_insert(&trg->buf[k], s);
+			ts_algo_list_node_t *tmp = run->nxt;
+			ts_algo_list_remove(src->buf+i, run);
+			free(run);
+			run = tmp;
+		}
 	}
-	free(it);
 	return rc;
 }
 

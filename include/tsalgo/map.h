@@ -51,6 +51,21 @@ void *ts_algo_map_remove(ts_algo_map_t *map, char *key, size_t ksz);
 void ts_algo_map_delete(ts_algo_map_t *map, char *key, size_t ksz);
 void *ts_algo_map_update(ts_algo_map_t *map, char *key, size_t ksz, void *data);
 
+#define ts_algo_map_addId(m,k,d) \
+	ts_algo_map_add(m, (char*)&k, sizeof(uint64_t), d);
+
+#define ts_algo_map_getId(m,k) \
+	ts_algo_map_get(m, (char*)&k, sizeof(uint64_t));
+
+#define ts_algo_map_removeId(m,k) \
+	ts_algo_map_remove(m, (char*)&k, sizeof(uint64_t));
+
+#define ts_algo_map_deleteId(m,k) \
+	ts_algo_map_delete(m, (char*)&k, sizeof(uint64_t));
+
+#define ts_algo_map_updateId(m,k,d) \
+	ts_algo_map_update(m, (char*)&k, sizeof(uint64_t), d);
+
 ts_algo_map_it_t *ts_algo_map_iterate(ts_algo_map_t *map);
 void ts_algo_map_it_advance(ts_algo_map_it_t *it);
 char ts_algo_map_it_eof(ts_algo_map_it_t *it);
