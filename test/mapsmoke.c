@@ -15,7 +15,7 @@ mydata_t buf[BUFSZ];
 
 void bufinit() {
 	for(int i=0;i<BUFSZ;i++) {
-		int k = 1000*i;
+		int k = 1000+i;
 		buf[i].key = k;
 		sprintf(buf[i].name, "%d", k);
 	}
@@ -28,24 +28,25 @@ char keyseen(uint64_t *mem, int sz, uint64_t k) {
 	return 0;
 }
 
-int main() {
+int testAddAndIter(uint32_t mapsz) {
 	uint64_t *mem = NULL;
 	char err = 0;
 	srand(time(NULL));
 	bufinit();
-	ts_algo_map_t *map = ts_algo_map_new(0, NULL);
+	ts_algo_map_t *map = ts_algo_map_new(mapsz, ts_algo_hash_id, NULL);
 	if (map == NULL) {
 		fprintf(stderr, "Can't creat map\n");
-		exit(1);
+		return -1;
 	}
 	for (int i=0;i<BUFSZ;i++) {
-		ts_algo_rc_t rc = ts_algo_map_add(map, buf[i].key, buf+i);
+		ts_algo_rc_t rc = ts_algo_map_add(map, (char*)&buf[i].key, sizeof(uint64_t), buf+i);
 		if (rc != TS_ALGO_OK) {
 			fprintf(stderr, "Can't add: %d\n", rc);
 			err = 1;
 			goto cleanup;
 		}
 	}
+	// ts_algo_map_showslots(map); fprintf(stderr, "\n");
 
 	ts_algo_map_it_t *it=NULL;
 	for(int i=0;i<2;i++) {
@@ -63,9 +64,10 @@ int main() {
 		) {
 			ts_algo_map_slot_t *s = ts_algo_map_it_get(it);
 			if (s == NULL) {
+				fprintf(stderr, "NO SLOT\n");
 				free(it); it=NULL; break;
 			}
-			fprintf(stderr, "%d: %lu -> '%s'\n", it->count-1, s->key, (char*)((mydata_t*)s->data)->name);
+			// fprintf(stdout, "%d: %lu -> '%s'\n", it->count-1, (uint64_t)(*s->key), (char*)((mydata_t*)s->data)->name);
 			x++;
 			if (x != it->count) {
 				free(it); it=NULL; break;
@@ -77,7 +79,7 @@ int main() {
 			goto cleanup;
 		} else {
 			if (it->count != map->count+1) {
-				fprintf(stderr, "wrong count: %d\n", it->count);
+				fprintf(stderr, "wrong count: %d | %d\n", it->count, map->count);
 				err = 1;
 				free(it);
 				goto cleanup;
@@ -100,22 +102,22 @@ int main() {
 			k=rand()%BUFSZ;
 		} while (keyseen(mem, i, k));
 		mem[i] = k;
-		mydata_t *data = ts_algo_map_get(map, buf[k].key);
-		fprintf(stderr, "looking at '%s'\n", buf[k].name);
+		mydata_t *data = ts_algo_map_get(map, (char*)&buf[k].key, sizeof(uint64_t));
+		// fprintf(stderr, "looking at '%s'\n", buf[k].name);
 		if (strcmp(data->name, buf[k].name) != 0) {
 			fprintf(stderr, "FAIL: wrong name for %d: %s\n", k, data->name);
 			err = 1;
 			goto cleanup;
 		}
-		mydata_t *datb = ts_algo_map_remove(map, buf[k].key);
+		mydata_t *datb = ts_algo_map_remove(map, (char*)&buf[k].key, sizeof(uint64_t));
 		if (datb != data) {
 			fprintf(stderr, "FAIL: something awful happened: %p != %p\n", data, datb);
 			err = 1;
 			goto cleanup;
 		}
-		data = ts_algo_map_get(map, buf[k].key);
+		data = ts_algo_map_get(map, (char*)&buf[k].key, sizeof(uint64_t));
 		if (data != NULL) {
-			fprintf(stderr, "FAIL: found removed element: %p\n", data);
+			fprintf(stderr, "FAIL: found removed element: %p (%p)\n", data, datb);
 			err = 1;
 			goto cleanup;
 		}
@@ -126,7 +128,16 @@ cleanup:
 	ts_algo_map_destroy(map); free(map);
 	if (err == 0) {
 		fprintf(stderr, "SUCCESS!\n");
-		exit(0);
+		return 0;
 	}
-	exit(1);
+	return -1;
+}
+
+int main() {
+	for(int i=0;i<100;i++) {
+		if (testAddAndIter(0) != 0) exit(1);
+		if (testAddAndIter(256) != 0) exit(1);
+		if (testAddAndIter(32) != 0) exit(1);
+	}
+	exit(0);
 }

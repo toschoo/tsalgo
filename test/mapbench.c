@@ -66,7 +66,7 @@ cleanup:
 	return err;
 }
 
-char testinsmap(int it) {
+char testinsmap(int it, uint32_t sz) {
 	progress_t p;
 	timestamp_t t1,t2;
 	uint64_t d = 0;
@@ -76,10 +76,10 @@ char testinsmap(int it) {
 		fprintf(stderr, "Can't creat map\n");
 		return -1;
 	}
-	fprintf(stderr, "Map\n");
+	fprintf(stderr, "Map with base size %u\n", sz);
 	init_progress(&p,stdout,it);
 	for (int j=0;j<it;j++) {
-		if (ts_algo_map_init(map, 32768, NULL) != TS_ALGO_OK) {
+		if (ts_algo_map_init(map, sz, ts_algo_hash_id, NULL) != TS_ALGO_OK) {
 			printf("cannot init map\n");
 			err = 1;
 			break;
@@ -89,8 +89,8 @@ char testinsmap(int it) {
 			err = 1;
 			break;
 		}
-		for (int i=0;i<ELEMENTS;i++) {
-			ts_algo_rc_t rc = ts_algo_map_add(map, i, (void*)(uint64_t)i);
+		for (uint64_t i=0;i<ELEMENTS;i++) {
+			ts_algo_rc_t rc = ts_algo_map_add(map, (char*)&i, sizeof(uint64_t), (void*)(uint64_t)i);
 			if (rc != TS_ALGO_OK) {
 				fprintf(stderr, "Can't add: %d\n", rc);
 				err = 1; break;
@@ -121,7 +121,11 @@ int main() {
 		fprintf(stderr, "FAILED!\n");
 		exit(1);
 	} 
-	if (testinsmap(100) != 0) {
+	if (testinsmap(100, 32768) != 0) {
+		fprintf(stderr, "FAILED!\n");
+		exit(1);
+	} 
+	if (testinsmap(100, 65536) != 0) {
 		fprintf(stderr, "FAILED!\n");
 		exit(1);
 	} 
