@@ -28,6 +28,34 @@ char keyseen(uint64_t *mem, int sz, uint64_t k) {
 	return 0;
 }
 
+int testEmpty() {
+	int err=0;
+	ts_algo_map_t *map = ts_algo_map_new(0, ts_algo_hash_id, NULL);
+	if (map == NULL) {
+		fprintf(stderr, "Can't creat map\n");
+		return -1;
+	}
+	fprintf(stderr, "Map Count: %u\n", map->count);
+	ts_algo_map_it_t *it=ts_algo_map_iterate(map);
+	for(; !ts_algo_map_it_eof(it); ts_algo_map_it_advance(it)) {
+		ts_algo_map_slot_t *s = ts_algo_map_it_get(it);
+		if (s == NULL) {
+			fprintf(stderr, "NO SLOT\n"); err=1; break;
+		}
+	}
+	fprintf(stderr, "It  Count: %u\n", it->count);
+	if (it->count != map->count+1) {
+		fprintf(stderr, "wrong count: %d | %d\n", it->count, map->count);
+		err = 1;
+	}
+	ts_algo_map_destroy(map); free(map); free(it);
+	if (err == 0) {
+		fprintf(stderr, "...OK\n");
+		return 0;
+	}
+	return -1;
+}
+
 int testAddAndIter(uint32_t mapsz) {
 	uint64_t *mem = NULL;
 	char err = 0;
@@ -134,6 +162,7 @@ cleanup:
 }
 
 int main() {
+	if (testEmpty() != 0) exit(1);
 	for(int i=0;i<100;i++) {
 		if (testAddAndIter(0) != 0) exit(1);
 		if (testAddAndIter(256) != 0) exit(1);

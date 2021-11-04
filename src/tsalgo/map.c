@@ -20,6 +20,7 @@
 #define SLOT(x) ((slot_t*)x)
 
 uint64_t ts_algo_hash_id(char *key, size_t ksz) {
+	if (key == NULL) return 0;
 	return (uint64_t)*key;
 }
 
@@ -49,6 +50,7 @@ static inline ts_algo_rc_t copyall(ts_algo_map_t *src,
 			run = tmp;
 		}
 	}
+	trg->count = src->count;
 	return rc;
 }
 
@@ -105,7 +107,6 @@ ts_algo_rc_t ts_algo_map_init(ts_algo_map_t *map, uint32_t sz,
 	map->baseSize = sz==0?8192:sz;
 	map->curSize  = map->baseSize;
 	map->count    = 0;
-	map->factor   = 4;
 	map->del      = del;
 	map->hsh      = hsh;
 	map->buf      = NULL;
@@ -193,8 +194,9 @@ void ts_algo_map_delete(ts_algo_map_t *map, char *key, size_t ksz) {
 void *ts_algo_map_update(ts_algo_map_t *map, char *key, size_t ksz, void *data) {
 	slot_t *s = getslot(map, key, ksz);
 	if (s == NULL) return NULL;
+	void *d = s->data;
 	s->data = data;
-	return data;
+	return d;
 }
 
 ts_algo_map_it_t *ts_algo_map_iterate(ts_algo_map_t *map) {
