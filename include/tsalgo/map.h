@@ -22,7 +22,7 @@
  * Type of a hash function that, provided a byte buffer, returns a 64bit key.
  * -------------------------------------------------------------------------
  */
-typedef uint64_t (*ts_algo_hash_t)(char*,size_t);
+typedef uint64_t (*ts_algo_hash_t)(const char*,size_t);
 
 /* -------------------------------------------------------------------------
  * The id "hash" that, provided a byte buffer representing an integer,
@@ -36,7 +36,7 @@ typedef uint64_t (*ts_algo_hash_t)(char*,size_t);
  * Otherwise, only a subsets of slots of the hashmap are used.
  * -------------------------------------------------------------------------
  */
-uint64_t ts_algo_hash_id(char* key, size_t ksz);
+uint64_t ts_algo_hash_id(const char *key, size_t ksz);
 
 /* -------------------------------------------------------------------------
  * The map structure

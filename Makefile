@@ -14,6 +14,7 @@ FLGMSG = @printf "CFLAGS: $(CFLAGS)\nLDFLAGS: $(LDFLAGS)\n"
 INSMSG = @printf ". setenv.sh"
 
 CFLAGS = -O3 -g -Wall -std=c99 -fPIC -D_GNU_SOURCE -D_POSIX_C_SOURCE=200809L
+CXXFLAGS = -O3 -g -Wall -fPIC -D_GNU_SOURCE -D_POSIX_C_SOURCE=200809L
 LDFLAGS = -L./lib
 
 INC = -I./include -I./test
@@ -96,13 +97,15 @@ flags:
 
 .cpp.o:	$(DEP)
 	$(CMPMSG)
-	$(CXX) $(CFLAGS) $(INC) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) $(INC) -c -o $@ $<
 
 # Tests and demos
 binomtree:	$(TST)/binomtree
 treesmoke:	$(TST)/treesmoke
 mapsmoke:	$(TST)/mapsmoke
+mapcitysmoke:	$(TST)/mapcitysmoke
 mapbench:	$(TST)/mapbench
+mapcitybench:	$(TST)/mapcitybench
 treerandom:	$(TST)/treerandom
 treebench:	$(TST)/treebench
 lrurandom:	$(TST)/lrurandom
@@ -142,6 +145,14 @@ $(TST)/treesmoke:	$(OBJ) $(DEP) lib $(TST)/treesmoke.o
 $(TST)/mapsmoke:	$(OBJ) $(DEP) lib $(TST)/mapsmoke.o
 			$(LNKMSG)
 			$(CC) $(LDFLAGS) -o $(TST)/mapsmoke $(TST)/mapsmoke.o -lm -ltsalgo
+
+$(TST)/mapcitysmoke:	$(OBJ) $(DEP) lib $(TST)/mapcitysmoke.o
+			$(LINKMSG)
+			$(CC) $(LDFLAGS) -o $(TST)/mapcitysmoke $(TST)/mapcitysmoke.o -lm -ltsalgo -lcityhash
+
+$(TST)/mapcitysmoke.o:	$(DEP) $(TST)/mapsmoke.c
+			$(CMPMSG)
+			$(CXX) $(CXXFLAGS) -D_CITY_ $(INC) -c -o $@ $(TST)/mapsmoke.c
 
 $(TST)/binomtree:	$(OBJ) $(DEP) lib $(TST)/binomtree.o $(SRC)/random.o
 			$(LNKMSG)
@@ -196,6 +207,18 @@ $(TST)/mapbench:	$(OBJ) $(DEP) lib $(TST)/mapbench.o $(TST)/progress.o \
 			                    $(TST)/progress.o \
 			                    $(TST)/mapbench.o -ltsalgo -lm
 
+$(TST)/mapcitybench:	$(OBJ) $(DEP) lib $(TST)/mapcitybench.o $(TST)/progress.o \
+			                  $(SRC)/random.o
+			$(LNKMSG)
+			$(CC) $(LDFLAGS) -o $(TST)/mapcitybench  \
+			                    $(SRC)/random.o   \
+			                    $(TST)/progress.o \
+			                    $(TST)/mapcitybench.o -ltsalgo -lm -lcityhash
+
+$(TST)/mapcitybench.o:	$(DEP) $(TST)/mapbench.c
+			$(CMPMSG)
+			$(CXX) $(CXXFLAGS) -D_CITY_ $(INC) -c -o $@ $(TST)/mapbench.c
+
 $(TST)/listrandom:	$(OBJ) $(DEP) lib $(TST)/listrandom.o $(SRC)/random.o
 			$(LNKMSG)
 			$(CC) $(LDFLAGS) -o $(TST)/listrandom \
@@ -244,7 +267,9 @@ clean:
 	rm -f $(TOOLS)/*.o
 	rm -f $(TST)/treesmoke
 	rm -f $(TST)/mapsmoke
+	rm -f $(TST)/mapcitysmoke
 	rm -f $(TST)/mapbench
+	rm -f $(TST)/mapcitybench
 	rm -f $(TST)/treerandom
 	rm -f $(TST)/treebench
 	rm -f $(TST)/lrurandom

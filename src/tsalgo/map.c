@@ -19,7 +19,7 @@
 
 #define SLOT(x) ((slot_t*)x)
 
-uint64_t ts_algo_hash_id(char *key, size_t ksz) {
+uint64_t ts_algo_hash_id(const char *key, size_t ksz) {
 	if (key == NULL) return 0;
 	return (uint64_t)*key;
 }
