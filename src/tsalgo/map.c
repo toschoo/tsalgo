@@ -6,7 +6,7 @@
 
 #define slot_t ts_algo_map_slot_t
 
-#define MAKESLOT(k,s,d) \
+#define MAKESLOT(k,s,h,d) \
 	slot_t *slot = malloc(sizeof(slot_t)); \
 	if (slot == NULL) return TS_ALGO_NO_MEM; \
 	slot->key = malloc(s); \
@@ -15,7 +15,8 @@
 	}\
 	memcpy(slot->key, k, s);\
 	slot->ksz = s; \
-	slot->data = d;
+	slot->data = d; \
+	slot->hash = h;
 
 #define SLOT(x) ((slot_t*)x)
 
@@ -42,7 +43,7 @@ static inline ts_algo_rc_t copyall(ts_algo_map_t *src,
 		for(ts_algo_list_node_t *run=src->buf[i].head; run!=NULL;) {
 			ts_algo_map_slot_t *s = run->cont;
 			if (s == NULL) break;
-			uint64_t k = trg->hsh(s->key, s->ksz)%trg->curSize;
+			uint64_t k = s->hash%trg->curSize;
 			rc = ts_algo_list_insert(&trg->buf[k], s);
 			ts_algo_list_node_t *tmp = run->nxt;
 			ts_algo_list_remove(src->buf+i, run);
@@ -142,8 +143,9 @@ ts_algo_rc_t ts_algo_map_add(ts_algo_map_t *map, char *key, size_t ksz, void *da
 		rc = bufresize(map);
 	        if (rc != TS_ALGO_OK) return rc;
 	}
-	uint64_t k = map->hsh(key, ksz)%map->curSize;
-	MAKESLOT(key, ksz, data);
+	uint64_t k = map->hsh(key, ksz);
+	MAKESLOT(key, ksz, k, data);
+	k%=map->curSize;
 	rc = ts_algo_list_insert(&map->buf[k], slot);
 	map->count++;
 	return rc;

@@ -67,9 +67,10 @@ typedef struct {
  * -------------------------------------------------------------------------
  */
 typedef struct {
-	char  *key; // The key
-	size_t ksz; // The size of the key data
-	void *data; // The data stored under the key
+	char     *key; // The key
+	size_t    ksz; // The size of the key data
+	uint64_t hash; // We remember the hash
+	void    *data; // The data stored under the key
 } ts_algo_map_slot_t;
 
 /* -------------------------------------------------------------------------
