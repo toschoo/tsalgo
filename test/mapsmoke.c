@@ -12,7 +12,6 @@ extern "C" {
 
 #ifdef _CITY_
 #include <city.h>
-// using namespace NAMESPACE_FOR_HASH_FUNCTIONS;
 #define Hash64 CityHash64
 #endif
 
@@ -38,6 +37,16 @@ char keyseen(uint64_t *mem, int sz, uint64_t k) {
 		if (k == mem[i]) return 1;
 	}
 	return 0;
+}
+
+#define SLOT(x) ((ts_algo_map_slot_t*)x)
+#define KEY(x) (*(uint64_t*)SLOT(x)->key)
+#define MYDATA(x) ((mydata_t*)(SLOT(x)->data))
+
+ts_algo_cmp_t listcompare(void *one, void *two) {
+	if (KEY(one) < KEY(two)) return ts_algo_cmp_less;
+	if (KEY(one) > KEY(two)) return ts_algo_cmp_greater;
+	return ts_algo_cmp_equal;
 }
 
 int testEmpty() {
@@ -129,6 +138,45 @@ int testAddAndIter(uint32_t mapsz, ts_algo_hash_t hsh) {
 	    
 		// fprintf(stderr, "...OK\n");
 	}
+
+	{ // in a block to avoid 'jump crosses initialisation'
+		ts_algo_list_t *tmp = ts_algo_map_toList(map);
+		if (tmp == NULL) {
+			fprintf(stderr, "can't get list from map\n");
+			err = 1; 
+			goto cleanup;
+		}
+	
+		ts_algo_list_t *l = ts_algo_list_sort(tmp, listcompare);
+		ts_algo_list_destroy(tmp); free(tmp);
+		if (l == NULL) {
+			fprintf(stderr, "out of memory\n");
+			err = 1; 
+			goto cleanup;
+		}
+	
+		// check list
+		int i=0;
+		for(ts_algo_list_node_t *run=l->head; run!=NULL; run=run->nxt) {
+			if (*((uint64_t*)SLOT(run->cont)->key) != buf[i].key) {
+				fprintf(stderr, "wrong key in %d: %lu | %lu\n", i,
+			                       *((uint64_t*)SLOT(run->cont)->key),
+				                                      buf[i].key);
+				err = 1; break;
+			}
+			if (strcmp(MYDATA(run->cont)->name, buf[i].name) != 0) {
+				fprintf(stderr, "wrong data in %d: %s | %s\n", i,
+				                         MYDATA(run->cont)->name,
+				                                    buf[i].name);
+				err = 1; break;
+			}
+			// fprintf(stderr, "%d (%lu): %s\n", i, buf[i].key, MYDATA(run->cont)->name);
+			i++;
+		}
+		ts_algo_list_destroy(l); free(l);
+		if (err != 0) goto cleanup;
+	}
+	
 	mem = (uint64_t*)calloc(10, sizeof(uint64_t));
 	if (mem == NULL) {
 		fprintf(stderr, "No more memory\n");

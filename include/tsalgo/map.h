@@ -27,7 +27,7 @@ typedef uint64_t (*ts_algo_hash_t)(const char*,size_t);
 /* -------------------------------------------------------------------------
  * The id "hash" that, provided a byte buffer representing an integer,
  * returns a 64bit key that corresponds to the bytes in the buffer
- * interpreted as 64bit unsigned integer.
+ * interpreted as 64bit unsigned integer. If 'key' is NULL the result is 0.
  * This function is intended for use with applications that actually
  * uint64_t keys that do not need further hashing.
  * Note that "not needing further hashing" means more
@@ -184,6 +184,9 @@ void *ts_algo_map_update(ts_algo_map_t *map, char *key, size_t ksz, void *data);
  *   // do something with the data
  * }
  * free(it);
+ * 
+ * Note that the order of elements as presented by the iterator is
+ *      arbitrary. Application code should rely on any specific ordering
  * -------------------------------------------------------------------------
  */
 ts_algo_map_it_t *ts_algo_map_iterate(ts_algo_map_t *map);
@@ -211,6 +214,14 @@ void ts_algo_map_it_reset(ts_algo_map_it_t *it);
  * -------------------------------------------------------------------------
  */
 ts_algo_map_slot_t *ts_algo_map_it_get(ts_algo_map_it_t *it);
+
+/* -------------------------------------------------------------------------
+ * Convert map to list. The list contains the original slots from the map.
+ * The memory should not be freed, the slots are still pointed to
+ * by the original map. Note further that the list is not sorted.
+ * -------------------------------------------------------------------------
+ */
+ts_algo_list_t *ts_algo_map_toList(ts_algo_map_t *map);
 
 /* -------------------------------------------------------------------------
  * Debug function that shows the number of entries per slot.
