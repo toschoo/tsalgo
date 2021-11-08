@@ -48,15 +48,12 @@ void ts_algo_list_destroyAll(ts_algo_list_t *list) {
 	ts_algo_list_destroy(list);
 }
 
-/* ------------------------------------------------------------------------
- * insert 
- * ------------------------------------------------------------------------
- */
-ts_algo_rc_t ts_algo_list_insert(ts_algo_list_t *list, void *cont) {
+static inline ts_algo_rc_t insert(ts_algo_list_t *list, void *cont,
+                                  ts_algo_list_node_t        *node) {
 	ts_algo_list_node_t *tmp;
 
 	if (list->head == NULL) {
-		list->head = malloc(sizeof(ts_algo_list_node_t));
+		list->head = node;
 		if (list->head == NULL) return -1;
 		list->head->nxt=NULL;
 		list->head->prv=NULL;
@@ -66,7 +63,7 @@ ts_algo_rc_t ts_algo_list_insert(ts_algo_list_t *list, void *cont) {
 		return 0;
 	}
 	tmp=list->head;
-	list->head=malloc(sizeof(ts_algo_list_node_t));
+	list->head=node;
 	if (list->head == NULL) return -1;
 	list->head->nxt=tmp;
 	tmp->prv=list->head;
@@ -77,13 +74,34 @@ ts_algo_rc_t ts_algo_list_insert(ts_algo_list_t *list, void *cont) {
 }
 
 /* ------------------------------------------------------------------------
- * append
+ * insert allocating new list node
  * ------------------------------------------------------------------------
  */
-ts_algo_rc_t ts_algo_list_append(ts_algo_list_t *list, void *cont) {
-	if (list->last == NULL) return ts_algo_list_insert(list,cont);
-	
-	list->last->nxt = malloc(sizeof(ts_algo_list_node_t));
+ts_algo_rc_t ts_algo_list_insert(ts_algo_list_t *list, void *cont) {
+	ts_algo_list_node_t *node = malloc(sizeof(ts_algo_list_node_t));
+	if (node == NULL) return TS_ALGO_NO_MEM;
+	ts_algo_rc_t rc = insert(list, cont, node);
+	if (rc != TS_ALGO_OK) free(node);
+	return rc;
+}
+
+/* ------------------------------------------------------------------------
+ * insert reusing list node
+ * ------------------------------------------------------------------------
+ */
+ts_algo_rc_t ts_algo_list_insertNode(ts_algo_list_t *list, void *cont,
+                                     ts_algo_list_node_t        *node) {
+	return insert(list, cont, node);
+}
+
+/* ------------------------------------------------------------------------
+ * Helper: append
+ * ------------------------------------------------------------------------
+ */
+static inline ts_algo_rc_t append(ts_algo_list_t *list, void *cont,
+                                  ts_algo_list_node_t        *node) {
+	if (list->last == NULL) return insert(list,cont,node);
+	list->last->nxt = node;
 	if (list->last->nxt == NULL) return -1;
 	list->last->nxt->nxt=NULL;
 	list->last->nxt->prv=list->last;
@@ -92,6 +110,28 @@ ts_algo_rc_t ts_algo_list_append(ts_algo_list_t *list, void *cont) {
 	list->len++;
 	return 0;
 }
+
+/* ------------------------------------------------------------------------
+ * append allocating new list node
+ * ------------------------------------------------------------------------
+ */
+ts_algo_rc_t ts_algo_list_append(ts_algo_list_t *list, void *cont) {
+	ts_algo_list_node_t *node = malloc(sizeof(ts_algo_list_node_t));
+	if (node == NULL) return TS_ALGO_NO_MEM;
+	ts_algo_rc_t rc = append(list, cont, node);
+	if (rc != TS_ALGO_OK) free(node);
+	return rc;
+}
+
+/* ------------------------------------------------------------------------
+ * append reusing list node
+ * ------------------------------------------------------------------------
+ */
+ts_algo_rc_t ts_algo_list_appendNode(ts_algo_list_t *list, void *cont,
+                                     ts_algo_list_node_t        *node) {
+	return append(list, cont, node);
+}
+
 
 /* ------------------------------------------------------------------------
  * remove

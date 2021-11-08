@@ -56,20 +56,40 @@ void ts_algo_list_destroyAll(ts_algo_list_t *list);
 /* ------------------------------------------------------------------------
  * insert 
  * ------
- * Inserts an element at the head of the list.
+ * Inserts an element at the head of the list allocating a new list node.
  * running time: O(1)
  * ------------------------------------------------------------------------
  */
 ts_algo_rc_t ts_algo_list_insert(ts_algo_list_t *list, void *cont);
 
 /* ------------------------------------------------------------------------
+ * insertNode
+ * ----------
+ * Inserts an element at the head of the list reusing an existing list node.
+ * running time: O(1)
+ * ------------------------------------------------------------------------
+ */
+ts_algo_rc_t ts_algo_list_insertNode(ts_algo_list_t *list, void *cont,
+                                     ts_algo_list_node_t        *node);
+
+/* ------------------------------------------------------------------------
  * append
  * ------
- * Adds an element at the end of the list.
+ * Adds an element at the end of the list allocating a new list node.
  * running time: O(1)
  * ------------------------------------------------------------------------
  */
 ts_algo_rc_t ts_algo_list_append(ts_algo_list_t *list, void *cont);
+
+/* ------------------------------------------------------------------------
+ * append
+ * ------
+ * Adds an element at the end of the list reusing an existing list node.
+ * running time: O(1)
+ * ------------------------------------------------------------------------
+ */
+ts_algo_rc_t ts_algo_list_appendNode(ts_algo_list_t *list, void *cont,
+                                     ts_algo_list_node_t        *node);
 
 /* ------------------------------------------------------------------------
  * remove

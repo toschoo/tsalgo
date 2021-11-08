@@ -24,6 +24,7 @@ void init_keys() {
 }
 
 ts_algo_bool_t test_simple() {
+	ts_algo_list_node_t *tmp;
 	ts_algo_list_t list;
 	uint64_t key = 1;
 
@@ -55,13 +56,17 @@ ts_algo_bool_t test_simple() {
 	    list.last == NULL) return FALSE;
 
 	/* remove to 1 */
+	tmp = list.head;
 	ts_algo_list_remove(&list, list.head);
+	free(tmp);
 	if (list.len != 1) return FALSE;
 	if (list.head != list.last ||
 	    list.last == NULL) return FALSE;
 
 	/* remove to 0 */
+	tmp = list.head;
 	ts_algo_list_remove(&list, list.head);
+	free(tmp);
 	if (list.len != 0) return FALSE;
 	if (list.head != list.last ||
 	    list.last != NULL) return FALSE;
@@ -73,7 +78,9 @@ ts_algo_bool_t test_simple() {
 	    list.last == NULL) return FALSE;
 
 	/* remove to 0 */
+	tmp = list.head;
 	ts_algo_list_remove(&list, list.head);
+	free(tmp);
 	if (list.len != 0) return FALSE;
 	if (list.head != list.last ||
 	    list.last != NULL) return FALSE;
@@ -92,13 +99,17 @@ ts_algo_bool_t test_simple() {
 	    list.last == NULL) return FALSE;
 
 	/* remove to 1 */
+	tmp = list.head;
 	ts_algo_list_remove(&list, list.head);
+	free(tmp);
 	if (list.len != 1) return FALSE;
 	if (list.head != list.last ||
 	    list.last == NULL) return FALSE;
 
 	/* remove to 0 */
+	tmp = list.head;
 	ts_algo_list_remove(&list, list.head);
+	free(tmp);
 	if (list.len != 0) return FALSE;
 	if (list.head != list.last ||
 	    list.last != NULL) return FALSE;

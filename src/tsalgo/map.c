@@ -74,10 +74,9 @@ static inline ts_algo_rc_t moveall(ts_algo_map_t *src,
 			ts_algo_map_slot_t *s = run->cont;
 			if (s == NULL) break;
 			uint64_t k = s->hash%trg->curSize;
-			rc = ts_algo_list_insert(&trg->buf[k], s);
 			ts_algo_list_node_t *tmp = run->nxt;
 			ts_algo_list_remove(src->buf+i, run);
-			free(run); // we could reuse the memory!
+			rc = ts_algo_list_insertNode(&trg->buf[k], s, run);
 			run = tmp;
 		}
 	}
