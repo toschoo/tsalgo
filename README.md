@@ -35,11 +35,16 @@ Currently the library contains:
   + lists
   + files ("external sorting")
 - an AVL tree implementation
+- a hashmap implementation
+- a generic LRU cache
 
 The library is tested on Linux and should work
 on other systems as well. The tests use features
 only available on Linux (e.g. high resolution timers)
-and won't work on CygWin (and similar).
+and won't work on some systems.
+The library itself does not require additional libraries;
+some tests, however, have external dependencies
+(e.g. Google's City Hash algorithm).
 
 The code is licensed under the LGPL V3 with the exception
 that static linking is explicitly allowed 

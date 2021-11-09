@@ -3,13 +3,15 @@
  * ========================================================================
  * The Map Datatype
  * A hashmap providing callbacks to handle generic data.
- * The map hashes the key data passed in a takes the resulting number
+ * The map hashes the key data passed in and takes the resulting number
  * modulo the current size of the internal buffer.
- * The hashmap is provided by the user application. It should be chosen
+ * The hash function is provided by the user application. It should be chosen
  * according to the requirements of the application, such as performance
  * or persistency. Note that some hash functions do not guarantee
  * backward compatibility between releases.
  * Such a hash would be a poor choice where persistency is needed.
+ * The library provides an "identity" hash intended for applications
+ * where the key can be represented as an unsigend 64bit integer.
  * ========================================================================
  */
 #ifndef ts_algo_map_decl
@@ -20,23 +22,26 @@
 
 /* -------------------------------------------------------------------------
  * Type of a hash function that, provided a byte buffer, returns a 64bit key.
+ * The third parameter is intended for additional resources needed by the
+ * concrete hash function.
  * -------------------------------------------------------------------------
  */
-typedef uint64_t (*ts_algo_hash_t)(const char*,size_t);
+typedef uint64_t (*ts_algo_hash_t)(const char*,size_t,void*);
 
 /* -------------------------------------------------------------------------
  * The id "hash" that, provided a byte buffer representing an integer,
  * returns a 64bit key that corresponds to the bytes in the buffer
- * interpreted as 64bit unsigned integer. If 'key' is NULL the result is 0.
+ * interpreted as a 64bit unsigned integer. If 'key' is NULL the result is 0.
  * This function is intended for use with applications that actually
- * uint64_t keys that do not need further hashing.
+ * use uint64_t keys that do not need further hashing.
  * Note that "not needing further hashing" means more
  * than just being numerical. The keys used by the application should
- * also not share the same divisers or be all multiples of each other.
- * Otherwise, only a subsets of slots of the hashmap are used.
+ * also not all share divisers or be all multiples of each other.
+ * Otherwise, only a subset of slots of the hashmap will be used.
+ * The third parameter is ignored.
  * -------------------------------------------------------------------------
  */
-uint64_t ts_algo_hash_id(const char *key, size_t ksz);
+uint64_t ts_algo_hash_id(const char *key, size_t ksz, void *ignore);
 
 /* -------------------------------------------------------------------------
  * The map structure
@@ -59,7 +64,7 @@ typedef struct {
   ts_algo_map_t *map; // The map over which to iterate
   int           slot; // Current slot in the buffer
   int          entry; // Current entry in that slot
-  uint32_t     count; // Number of element we are looking at now
+  uint32_t     count; // Number of the element we will see next (starting from 0)
 } ts_algo_map_it_t;
 
 /* -------------------------------------------------------------------------
@@ -69,7 +74,7 @@ typedef struct {
 typedef struct {
 	char     *key; // The key
 	size_t    ksz; // The size of the key data
-	uint64_t hash; // We remember the hash
+	uint64_t hash; // The hash of the key
 	void    *data; // The data stored under the key
 } ts_algo_map_slot_t;
 
@@ -100,6 +105,14 @@ ts_algo_rc_t ts_algo_map_init(ts_algo_map_t   *map,
                               uint32_t          sz,
                               ts_algo_hash_t   hsh,
                               ts_algo_delete_t del);
+
+/* -------------------------------------------------------------------------
+ * Destroy the map when not needed anymore. 
+ * If a 'del' function was supplied it will applied to all data
+ * in the map. Otherwise, if 'del' is NULL, life cycle management
+ * of the data is left to the application.
+ * -------------------------------------------------------------------------
+ */
 void ts_algo_map_destroy(ts_algo_map_t *map);
 
 /* -------------------------------------------------------------------------
@@ -135,7 +148,7 @@ void *ts_algo_map_get(ts_algo_map_t *map, char *key, size_t ksz);
 void *ts_algo_map_remove(ts_algo_map_t *map, char *key, size_t ksz);
 
 /* -------------------------------------------------------------------------
- * Removes the data stored with the key and, if del is not NULL,
+ * Removes the data stored with the key and, if 'del' is not NULL,
  * calls this function on the data.
  * -------------------------------------------------------------------------
  */
@@ -144,7 +157,7 @@ void ts_algo_map_delete(ts_algo_map_t *map, char *key, size_t ksz);
 /* -------------------------------------------------------------------------
  * Replaces the data stored with the key by the data passed in.
  * If the key was found, the old data are returned, otherwise NULL is returned
- * and no changes are perfomed! The old data are not destroyed.
+ * and no changes are perfomed. The old data are not destroyed!
  * -------------------------------------------------------------------------
  */
 void *ts_algo_map_update(ts_algo_map_t *map, char *key, size_t ksz, void *data);
@@ -186,7 +199,7 @@ void *ts_algo_map_update(ts_algo_map_t *map, char *key, size_t ksz, void *data);
  * free(it);
  * 
  * Note that the order of elements as presented by the iterator is
- *      arbitrary. Application code should rely on any specific ordering
+ *      arbitrary. Application code should rely on any specific ordering.
  * -------------------------------------------------------------------------
  */
 ts_algo_map_it_t *ts_algo_map_iterate(ts_algo_map_t *map);
@@ -207,7 +220,7 @@ char ts_algo_map_it_eof(ts_algo_map_it_t *it);
  * Rewind the iterator.
  * -------------------------------------------------------------------------
  */
-void ts_algo_map_it_reset(ts_algo_map_it_t *it);
+void ts_algo_map_it_rewind(ts_algo_map_it_t *it);
 
 /* -------------------------------------------------------------------------
  * Get the current slot.

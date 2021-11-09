@@ -17,7 +17,9 @@ extern "C" {
 
 #ifdef _CITY_
 #include <city.h>
-#define Hash64 CityHash64
+uint64_t Hash64(const char *key, size_t ksz, void *ignore) {
+	return CityHash64(key, ksz);
+}
 #endif
 
 typedef struct timespec timestamp_t;

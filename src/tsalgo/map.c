@@ -41,7 +41,7 @@
  * Implementation of the Id Hash
  * ----------------------------------------------------------------------------
  */
-uint64_t ts_algo_hash_id(const char *key, size_t ksz) {
+uint64_t ts_algo_hash_id(const char *key, size_t ksz, void *ignore) {
 	if (key == NULL) return 0;
 	return (uint64_t)*key;
 }
@@ -192,7 +192,7 @@ ts_algo_rc_t ts_algo_map_add(ts_algo_map_t *map, char *key, size_t ksz, void *da
 	        if (rc != TS_ALGO_OK) return rc;
 	}
 	// compute the hash
-	uint64_t k = map->hsh(key, ksz);
+	uint64_t k = map->hsh(key, ksz, NULL);
 	// make a slot (this also remembers the hash,
 	// so we don't need to compute it again when resizing;
 	// error handling is defined in the macro
@@ -214,7 +214,7 @@ ts_algo_rc_t ts_algo_map_add(ts_algo_map_t *map, char *key, size_t ksz, void *da
  * ----------------------------------------------------------------------------
  */
 static inline ts_algo_list_node_t *getnode(ts_algo_map_t *map, char *key, size_t ksz) {
-	uint64_t k = map->hsh(key, ksz)%map->curSize;
+	uint64_t k = map->hsh(key, ksz, NULL)%map->curSize;
 	for(ts_algo_list_node_t *run=map->buf[k].head; run!=NULL; run=run->nxt) {
 		if (memcmp(key, SLOT(run->cont)->key, ksz) == 0) return run;
 	}
@@ -248,7 +248,7 @@ void *ts_algo_map_get(ts_algo_map_t *map, char *key, size_t ksz) {
  * ----------------------------------------------------------------------------
  */
 void *ts_algo_map_remove(ts_algo_map_t *map, char *key, size_t ksz) {
-	uint64_t k = map->hsh(key, ksz)%map->curSize;
+	uint64_t k = map->hsh(key, ksz, NULL)%map->curSize;
 	for(ts_algo_list_node_t *run=map->buf[k].head; run!=NULL; run=run->nxt) {
 		if (memcmp(key, SLOT(run->cont)->key, ksz) == 0) {
 			ts_algo_list_remove(map->buf+k, run);
@@ -293,7 +293,7 @@ ts_algo_map_it_t *ts_algo_map_iterate(ts_algo_map_t *map) {
 	ts_algo_map_it_t *it = calloc(1, sizeof(ts_algo_map_it_t));
 	if (it == NULL) return NULL;
 	it->map = map;
-	ts_algo_map_it_reset(it);
+	ts_algo_map_it_rewind(it);
 	return it;
 }
 
@@ -312,7 +312,7 @@ char ts_algo_map_it_eof(ts_algo_map_it_t *it) {
  * Rewind the iterator.
  * ----------------------------------------------------------------------------
  */
-void ts_algo_map_it_reset(ts_algo_map_it_t *it) {
+void ts_algo_map_it_rewind(ts_algo_map_it_t *it) {
 	it->count = 0;
 	it->slot  = 0;
 	it->entry = -1; // note that we start below the first element

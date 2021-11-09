@@ -12,7 +12,9 @@ extern "C" {
 
 #ifdef _CITY_
 #include <city.h>
-#define Hash64 CityHash64
+uint64_t Hash64(const char *key, size_t ksz, void *ignore) {
+	return CityHash64(key, ksz);
+}
 #endif
 
 #define BUFSZ 256
@@ -104,7 +106,7 @@ int testAddAndIter(uint32_t mapsz, ts_algo_hash_t hsh) {
 			it=ts_algo_map_iterate(map);
 		} else {
 			// fprintf(stderr, "Once more...\n");
-			ts_algo_map_it_reset(it);
+			ts_algo_map_it_rewind(it);
 		}
 		uint32_t x=0;
 		for(; // call ts_algo_map_iterate here
