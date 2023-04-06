@@ -20,6 +20,8 @@
 #include <tsalgo/types.h>
 #include <tsalgo/list.h>
 
+#include <stdlib.h>
+
 /* -------------------------------------------------------------------------
  * Type of a hash function that, provided a byte buffer, returns a 64bit key.
  * The third parameter is intended for additional resources needed by the
